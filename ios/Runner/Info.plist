@@ -45,5 +45,11 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>We use the microphone to capture your spoken practice and translate it instantly.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>We ask for photo access so you can share images in the community feed.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Allow photo access to pick or save media when posting.</string>
 </dict>
 </plist>

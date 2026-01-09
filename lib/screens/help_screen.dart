@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../screens/community_screen.dart';
+import '../screens/privacy_screen.dart';
+import '../screens/progress_screen.dart';
+import '../screens/vocab_screen.dart';
 import '../theme/theme_colors.dart';
+import '../widgets/app_bottom_navigation_bar.dart';
+import '../widgets/app_more_options.dart';
+import '../widgets/settings_action_button.dart';
 
 class HelpScreen extends StatelessWidget {
   const HelpScreen({super.key});
@@ -14,6 +21,7 @@ class HelpScreen extends StatelessWidget {
         backgroundColor: ThemeColors.primary,
         elevation: 0,
         title: const Text('Help & Support'),
+        actions: const [SettingsActionButton()],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -73,6 +81,10 @@ class HelpScreen extends StatelessWidget {
             ),
           ],
         ),
+      ),
+      bottomNavigationBar: AppBottomNavigationBar(
+        currentIndex: 3,
+        moreOptions: _buildMoreOptions(context),
       ),
     );
   }
@@ -145,5 +157,50 @@ class HelpScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  List<MoreOption> _buildMoreOptions(BuildContext context) {
+    return [
+      MoreOption(
+        label: 'Community',
+        icon: LucideIcons.userPlus,
+        onTap: () {
+          Navigator.pop(context);
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const CommunityScreen()),
+          );
+        },
+      ),
+      MoreOption(
+        label: 'Progress',
+        icon: LucideIcons.activity,
+        onTap: () {
+          Navigator.pop(context);
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const ProgressScreen()),
+          );
+        },
+      ),
+      MoreOption(
+        label: 'Vocab & Phrases',
+        icon: LucideIcons.bookOpen,
+        onTap: () {
+          Navigator.pop(context);
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const VocabScreen()),
+          );
+        },
+      ),
+      MoreOption(
+        label: 'Privacy Policy',
+        icon: LucideIcons.shieldCheck,
+        onTap: () {
+          Navigator.pop(context);
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const PrivacyScreen()),
+          );
+        },
+      ),
+    ];
   }
 }

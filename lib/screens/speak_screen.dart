@@ -4,7 +4,9 @@ import 'package:provider/provider.dart';
 import '../providers/translate_provider.dart';
 import '../services/translation_service.dart';
 import '../services/tts_service.dart';
+import '../theme/theme_colors.dart';
 import '../utils/language_utils.dart';
+import '../widgets/settings_action_button.dart';
 
 class SpeakScreen extends StatelessWidget {
   const SpeakScreen({super.key});
@@ -29,15 +31,21 @@ class _SpeakScreenBody extends StatelessWidget {
     final provider = context.watch<TranslateProvider>();
     return Scaffold(
       backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: ThemeColors.primary,
+        elevation: 0,
+        title: const Text('Speak & Translate'),
+        actions: const [SettingsActionButton()],
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            _buildHeader(),
+            _buildHeader(provider, context),
             const SizedBox(height: 16),
             _buildStepIndicator(),
             const SizedBox(height: 16),
-            _buildRecordCard(provider),
+            _buildRecordCard(provider, context),
             const SizedBox(height: 16),
             _buildTranscribeCard(provider),
             const SizedBox(height: 16),
@@ -51,30 +59,46 @@ class _SpeakScreenBody extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(TranslateProvider provider, BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 18),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF6C63FF), Color(0xFF3A8DFF)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.all(Radius.circular(24)),
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        color: const Color(0xFF0F2D37),
+        border: Border.all(color: Colors.white24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-      child: const Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Need to translate?', style: TextStyle(color: Colors.white70)),
-          SizedBox(height: 8),
-          Text(
-            'Speak & translate',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          const Text(
+            'Need to translate something?',
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
           ),
-          SizedBox(height: 4),
-          Text(
-            'Record → Transcribe → Translate → Play',
+          const SizedBox(height: 6),
+          const Text(
+            'Speak in Tamil, Malayalam, or Hindi',
             style: TextStyle(color: Colors.white70),
+          ),
+          const SizedBox(height: 18),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0E6C92),
+              minimumSize: const Size.fromHeight(50),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+            onPressed: () => provider.toggleRecording(context),
+            icon: const Icon(Icons.mic, color: Colors.white),
+            label: const Text('Tap to Speak', style: TextStyle(fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -114,7 +138,7 @@ class _SpeakScreenBody extends StatelessWidget {
     );
   }
 
-  Widget _buildRecordCard(TranslateProvider provider) {
+  Widget _buildRecordCard(TranslateProvider provider, BuildContext context) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -134,7 +158,7 @@ class _SpeakScreenBody extends StatelessWidget {
           Row(
             children: [
               GestureDetector(
-                onTap: provider.toggleRecording,
+                onTap: () => provider.toggleRecording(context),
                 child: CircleAvatar(
                   radius: 30,
                   backgroundColor: provider.isListening

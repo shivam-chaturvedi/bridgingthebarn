@@ -6,6 +6,7 @@ import 'vocab_topic_screen.dart';
 import '../theme/theme_colors.dart';
 import '../data/content.dart';
 import '../data/vocab_data.dart';
+import '../widgets/settings_action_button.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -17,7 +18,7 @@ class HomeScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHeroCard(),
+          _buildHeroCard(context),
           const SizedBox(height: 20),
           _buildDailyGoalCard(),
           const SizedBox(height: 20),
@@ -46,7 +47,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHeroCard() {
+  Widget _buildHeroCard(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -58,13 +59,16 @@ class HomeScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            children: const [
-              Icon(Icons.favorite, color: Colors.white, size: 30),
-              SizedBox(width: 10),
-              Text(
-                'Bridging the Barn',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
+            children: [
+              const Icon(Icons.favorite, color: Colors.white, size: 30),
+              const SizedBox(width: 10),
+              const Expanded(
+                child: Text(
+                  'Bridging the Barn',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
+                ),
               ),
+              const SettingsActionButton(),
             ],
           ),
           const SizedBox(height: 4),
@@ -224,7 +228,7 @@ class HomeScreen extends StatelessWidget {
   Widget _buildPhraseCarousel() {
     final featuredTopics = vocabTopics.take(6).toList();
     return SizedBox(
-      height: 200,
+      height: 240,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: featuredTopics.length,
@@ -239,8 +243,8 @@ class HomeScreen extends StatelessWidget {
               MaterialPageRoute(builder: (_) => VocabTopicScreen(topic: topic)),
             ),
             child: Container(
-              width: 160,
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 14),
+              width: 170,
+              padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
               decoration: BoxDecoration(
                 color: const Color(0xFF041E25),
                 borderRadius: BorderRadius.circular(20),

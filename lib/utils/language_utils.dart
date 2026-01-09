@@ -54,13 +54,6 @@ class LanguageUtils {
       locale: 'kn-IN',
     ),
     LanguageDefinition(
-      code: 'ml',
-      name: 'മലയാളം',
-      flag: '🇮🇳',
-      mlKitLanguage: TranslateLanguage.malay,
-      locale: 'ml-IN',
-    ),
-    LanguageDefinition(
       code: 'mr',
       name: 'मराठी',
       flag: '🇮🇳',

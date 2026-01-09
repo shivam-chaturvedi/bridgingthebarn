@@ -2,7 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../data/content.dart';
+import '../screens/community_screen.dart';
+import '../screens/help_screen.dart';
+import '../screens/privacy_screen.dart';
+import '../screens/progress_screen.dart';
+import '../screens/vocab_screen.dart';
 import '../theme/theme_colors.dart';
+import '../widgets/app_bottom_navigation_bar.dart';
+import '../widgets/app_more_options.dart';
+import '../widgets/settings_action_button.dart';
 
 class LessonsScreen extends StatefulWidget {
   const LessonsScreen({super.key});
@@ -20,27 +28,36 @@ class _LessonsScreenState extends State<LessonsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(vertical: 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildHeader(),
-          const SizedBox(height: 16),
-          _buildProgressSummary(),
-          const SizedBox(height: 16),
-          _buildResumeCard(),
-          const SizedBox(height: 16),
-          ...modulesData.map(_buildModuleCard).toList(),
-          const SizedBox(height: 16),
-          _buildStudyTip(),
-          const SizedBox(height: 40),
-        ],
+    return Scaffold(
+      backgroundColor: ThemeColors.primary,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.only(bottom: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeader(context),
+              const SizedBox(height: 16),
+              _buildProgressSummary(),
+              const SizedBox(height: 16),
+              _buildResumeCard(),
+              const SizedBox(height: 16),
+              ...modulesData.map(_buildModuleCard).toList(),
+              const SizedBox(height: 16),
+              _buildStudyTip(),
+              const SizedBox(height: 40),
+            ],
+          ),
+        ),
+      ),
+      bottomNavigationBar: AppBottomNavigationBar(
+        currentIndex: 2,
+        moreOptions: _buildMoreOptions(context),
       ),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 18),
@@ -53,15 +70,26 @@ class _LessonsScreenState extends State<LessonsScreen> {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
-          Icon(LucideIcons.arrowLeft, color: Colors.white),
-          SizedBox(height: 10),
-          Text(
+        children: [
+          Row(
+            children: [
+              IconButton(
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                icon: const Icon(LucideIcons.arrowLeft, color: Colors.white),
+                onPressed: () => Navigator.pop(context),
+              ),
+              const Spacer(),
+              const SettingsActionButton(),
+            ],
+          ),
+          const SizedBox(height: 10),
+          const Text(
             'Learn English',
             style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
           ),
-          SizedBox(height: 6),
-          Text(
+          const SizedBox(height: 6),
+          const Text(
             'Step-by-step lessons for the workplace',
             style: TextStyle(fontSize: 16, color: Colors.white70),
           ),
@@ -268,5 +296,60 @@ class _LessonsScreenState extends State<LessonsScreen> {
         style: TextStyle(color: Colors.white70),
       ),
     );
+  }
+
+  List<MoreOption> _buildMoreOptions(BuildContext context) {
+    return [
+      MoreOption(
+        label: 'Community',
+        icon: LucideIcons.userPlus,
+        onTap: () {
+          Navigator.pop(context);
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const CommunityScreen()),
+          );
+        },
+      ),
+      MoreOption(
+        label: 'Progress',
+        icon: LucideIcons.activity,
+        onTap: () {
+          Navigator.pop(context);
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const ProgressScreen()),
+          );
+        },
+      ),
+      MoreOption(
+        label: 'Vocab & Phrases',
+        icon: LucideIcons.bookOpen,
+        onTap: () {
+          Navigator.pop(context);
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const VocabScreen()),
+          );
+        },
+      ),
+      MoreOption(
+        label: 'Help & Support',
+        icon: LucideIcons.headset,
+        onTap: () {
+          Navigator.pop(context);
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const HelpScreen()),
+          );
+        },
+      ),
+      MoreOption(
+        label: 'Privacy Policy',
+        icon: LucideIcons.shieldCheck,
+        onTap: () {
+          Navigator.pop(context);
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const PrivacyScreen()),
+          );
+        },
+      ),
+    ];
   }
 }

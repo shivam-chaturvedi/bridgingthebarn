@@ -7,10 +7,12 @@ import '../screens/help_screen.dart';
 import '../screens/privacy_screen.dart';
 import '../screens/progress_screen.dart';
 import '../screens/vocab_screen.dart';
+import '../services/permission_service.dart';
 import '../theme/theme_colors.dart';
 import '../widgets/app_bottom_navigation_bar.dart';
 import '../widgets/app_more_options.dart';
 import '../widgets/common_widgets.dart';
+import '../widgets/settings_action_button.dart';
 
 class CommunityScreen extends StatefulWidget {
   const CommunityScreen({super.key});
@@ -246,6 +248,15 @@ class _CommunityScreenState extends State<CommunityScreen> {
     ];
   }
 
+  Future<void> _handleAddImage() async {
+    if (!await PermissionService.ensureGalleryPermission(context)) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Gallery permission granted. Image upload coming soon.'),
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _postController.dispose();
@@ -281,13 +292,16 @@ class _CommunityScreenState extends State<CommunityScreen> {
                           icon: const Icon(Icons.arrow_back, color: Colors.white),
                         ),
                         const SizedBox(width: 4),
-                        const Text(
-                          'Community',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
+                        const Expanded(
+                          child: Text(
+                            'Community',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
+                        const SettingsActionButton(),
                       ],
                     ),
                     const SizedBox(height: 4),
@@ -374,7 +388,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                     Row(
                       children: [
                         IconButton(
-                          onPressed: () {},
+                          onPressed: _handleAddImage,
                           icon: const Icon(Icons.image, color: Colors.white70),
                         ),
                         const Spacer(),

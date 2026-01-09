@@ -9,6 +9,7 @@ import '../screens/progress_screen.dart';
 import '../theme/theme_colors.dart';
 import '../widgets/app_bottom_navigation_bar.dart';
 import '../widgets/app_more_options.dart';
+import '../widgets/settings_action_button.dart';
 import 'vocab_topic_screen.dart';
 
 class VocabScreen extends StatelessWidget {
@@ -22,6 +23,7 @@ class VocabScreen extends StatelessWidget {
         backgroundColor: ThemeColors.primary,
         title: const Text('Vocab & Phrases'),
         elevation: 0,
+        actions: const [SettingsActionButton()],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),

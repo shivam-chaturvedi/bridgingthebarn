@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:flutter/widgets.dart';
 import 'package:speech_to_text/speech_to_text.dart';
+
+import '../services/permission_service.dart';
 
 import '../services/translation_service.dart';
 import '../services/tts_service.dart';
@@ -31,15 +31,8 @@ class TranslateProvider extends ChangeNotifier {
     await _speech.initialize();
   }
 
-  Future<bool> _ensurePermission() async {
-    final status = await Permission.microphone.status;
-    if (status.isGranted) return true;
-    final result = await Permission.microphone.request();
-    return result.isGranted;
-  }
-
-  Future<void> toggleRecording() async {
-    if (!await _ensurePermission()) return;
+  Future<void> toggleRecording(BuildContext context) async {
+    if (!await PermissionService.ensureMicrophonePermission(context)) return;
     if (isListening) {
       await _speech.stop();
       isListening = false;
