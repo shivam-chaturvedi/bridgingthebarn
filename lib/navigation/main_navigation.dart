@@ -1,23 +1,28 @@
 import 'package:flutter/material.dart';
 
 import '../screens/community_screen.dart';
+import '../screens/help_screen.dart';
 import '../screens/home_screen.dart';
 import '../screens/lessons_screen.dart';
+import '../screens/privacy_screen.dart';
 import '../screens/progress_screen.dart';
 import '../screens/speak_screen.dart';
 import '../screens/vocab_screen.dart';
 import '../theme/theme_colors.dart';
+import '../widgets/app_more_options.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class MainNavigation extends StatefulWidget {
-  const MainNavigation({super.key});
+  const MainNavigation({super.key, this.initialIndex = 0});
+
+  final int initialIndex;
 
   @override
   State<MainNavigation> createState() => _MainNavigationState();
 }
 
 class _MainNavigationState extends State<MainNavigation> {
-  int _selectedIndex = 0;
+  late int _selectedIndex;
 
   static final _tabs = [
     const HomeScreen(),
@@ -25,95 +30,11 @@ class _MainNavigationState extends State<MainNavigation> {
     const LessonsScreen(),
   ];
 
-  void _showMoreOptions(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: const Color(0xFF02121B),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _MoreOptionTile(
-                label: 'Community',
-                icon: LucideIcons.userPlus,
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const CommunityScreen()),
-                  );
-                },
-              ),
-              _MoreOptionTile(
-                label: 'Progress',
-                icon: LucideIcons.activity,
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const ProgressScreen()),
-                  );
-                },
-              ),
-              _MoreOptionTile(
-                label: 'Vocab & Phrases',
-                icon: LucideIcons.bookOpen,
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const VocabScreen()),
-                  );
-                },
-              ),
-              _MoreOptionTile(
-                label: 'Help & Support',
-                icon: LucideIcons.headset,
-                onTap: () {
-                  Navigator.pop(context);
-                  _showInfoDialog(
-                    context,
-                    'Help & Support',
-                    'Reach out to support@bridgingbarn.com for assistance.',
-                  );
-                },
-              ),
-              _MoreOptionTile(
-                label: 'Privacy Policy',
-                icon: LucideIcons.shieldCheck,
-                onTap: () {
-                  Navigator.pop(context);
-                  _showInfoDialog(
-                    context,
-                    'Privacy Policy',
-                    'We value your privacy. Data stays on device unless you opt-in.',
-                  );
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
 
-  void _showInfoDialog(BuildContext context, String title, String message) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF041B24),
-        title: Text(title),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
-    );
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = widget.initialIndex.clamp(0, _tabs.length - 1);
   }
 
   @override
@@ -162,25 +83,63 @@ class _MainNavigationState extends State<MainNavigation> {
       ),
     );
   }
-}
 
-class _MoreOptionTile extends StatelessWidget {
-  const _MoreOptionTile({
-    required this.label,
-    required this.icon,
-    required this.onTap,
-  });
+  void _showMoreOptions(BuildContext context) {
+    showAppMoreOptions(context, _buildMoreOptions(context));
+  }
 
-  final String label;
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: Icon(icon, color: Colors.white70),
-      title: Text(label, style: const TextStyle(color: Colors.white)),
-      onTap: onTap,
-    );
+  List<MoreOption> _buildMoreOptions(BuildContext context) {
+    return [
+      MoreOption(
+        label: 'Community',
+        icon: LucideIcons.userPlus,
+        onTap: () {
+          Navigator.pop(context);
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const CommunityScreen()),
+          );
+        },
+      ),
+      MoreOption(
+        label: 'Progress',
+        icon: LucideIcons.activity,
+        onTap: () {
+          Navigator.pop(context);
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const ProgressScreen()),
+          );
+        },
+      ),
+      MoreOption(
+        label: 'Vocab & Phrases',
+        icon: LucideIcons.bookOpen,
+        onTap: () {
+          Navigator.pop(context);
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const VocabScreen()),
+          );
+        },
+      ),
+      MoreOption(
+        label: 'Help & Support',
+        icon: LucideIcons.headset,
+        onTap: () {
+          Navigator.pop(context);
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const HelpScreen()),
+          );
+        },
+      ),
+      MoreOption(
+        label: 'Privacy Policy',
+        icon: LucideIcons.shieldCheck,
+        onTap: () {
+          Navigator.pop(context);
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const PrivacyScreen()),
+          );
+        },
+      ),
+    ];
   }
 }

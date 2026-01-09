@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../data/vocab_data.dart';
+import '../screens/community_screen.dart';
+import '../screens/help_screen.dart';
+import '../screens/privacy_screen.dart';
+import '../screens/progress_screen.dart';
 import '../theme/theme_colors.dart';
+import '../widgets/app_bottom_navigation_bar.dart';
+import '../widgets/app_more_options.dart';
 import 'vocab_topic_screen.dart';
 
 class VocabScreen extends StatelessWidget {
@@ -50,8 +57,58 @@ class VocabScreen extends StatelessWidget {
           ],
         ),
       ),
+      bottomNavigationBar: AppBottomNavigationBar(
+        currentIndex: 3,
+        moreOptions: _buildMoreOptions(context),
+      ),
     );
   }
+
+  List<MoreOption> _buildMoreOptions(BuildContext context) {
+    return [
+      MoreOption(
+        label: 'Community',
+        icon: LucideIcons.userPlus,
+        onTap: () {
+          Navigator.pop(context);
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const CommunityScreen()),
+          );
+        },
+      ),
+      MoreOption(
+        label: 'Progress',
+        icon: LucideIcons.activity,
+        onTap: () {
+          Navigator.pop(context);
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const ProgressScreen()),
+          );
+        },
+      ),
+      MoreOption(
+        label: 'Help & Support',
+        icon: LucideIcons.headset,
+        onTap: () {
+          Navigator.pop(context);
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const HelpScreen()),
+          );
+        },
+      ),
+      MoreOption(
+        label: 'Privacy Policy',
+        icon: LucideIcons.shieldCheck,
+        onTap: () {
+          Navigator.pop(context);
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const PrivacyScreen()),
+          );
+        },
+      ),
+    ];
+  }
+
 }
 
 class _CategoryCard extends StatelessWidget {

@@ -1,7 +1,15 @@
 import 'package:flutter/material.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 import '../data/content.dart';
+import '../screens/help_screen.dart';
+import '../screens/privacy_screen.dart';
+import '../screens/progress_screen.dart';
+import '../screens/vocab_screen.dart';
 import '../theme/theme_colors.dart';
+import '../widgets/app_bottom_navigation_bar.dart';
+import '../widgets/app_more_options.dart';
 import '../widgets/common_widgets.dart';
 
 class CommunityScreen extends StatefulWidget {
@@ -193,6 +201,51 @@ class _CommunityScreenState extends State<CommunityScreen> {
     );
   }
 
+  List<MoreOption> _buildMoreOptions(BuildContext context) {
+    return [
+      MoreOption(
+        label: 'Progress',
+        icon: LucideIcons.activity,
+        onTap: () {
+          Navigator.pop(context);
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const ProgressScreen()),
+          );
+        },
+      ),
+      MoreOption(
+        label: 'Vocab & Phrases',
+        icon: Icons.book,
+        onTap: () {
+          Navigator.pop(context);
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const VocabScreen()),
+          );
+        },
+      ),
+      MoreOption(
+        label: 'Help & Support',
+        icon: Icons.headset,
+        onTap: () {
+          Navigator.pop(context);
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const HelpScreen()),
+          );
+        },
+      ),
+      MoreOption(
+        label: 'Privacy Policy',
+        icon: Icons.shield,
+        onTap: () {
+          Navigator.pop(context);
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const PrivacyScreen()),
+          );
+        },
+      ),
+    ];
+  }
+
   @override
   void dispose() {
     _postController.dispose();
@@ -202,139 +255,161 @@ class _CommunityScreenState extends State<CommunityScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: ThemeColors.communityHeaderDark,
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Community',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+    return Scaffold(
+      backgroundColor: ThemeColors.primary,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: ThemeColors.communityHeaderDark,
+                  borderRadius: BorderRadius.circular(24),
                 ),
-                const SizedBox(height: 4),
-                const Text('Share, learn, grow together'),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: const [
-                    CommunityStat(label: '156', subLabel: 'Active Today'),
-                    CommunityStat(label: '89', subLabel: 'Posts This Week'),
-                    CommunityStat(label: '342', subLabel: 'Members'),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: const Color(0xFF0E3B2E),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.white.withOpacity(0.05)),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.emoji_events, color: Colors.white70),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text(
-                        'Wall of Wins 🎉',
-                        style: TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                      SizedBox(height: 4),
-                      Text('15 members completed lessons this week!'),
-                    ],
-                  ),
-                ),
-                const Icon(Icons.auto_graph, color: Colors.white70),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: _communityFilters.map((filter) {
-              final selected = _selectedFilter == filter;
-              return Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: ChoiceChip(
-                  label: Text(filter),
-                  selected: selected,
-                  backgroundColor: const Color(0xFF041D25),
-                  selectedColor: const Color(0xFF0E5469),
-                  labelStyle: const TextStyle(color: Colors.white),
-                  onSelected: (_) => setState(() => _selectedFilter = filter),
-                ),
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: const Color(0xFF041D25),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Column(
-              children: [
-                TextField(
-                  controller: _postController,
-                  minLines: 2,
-                  maxLines: 4,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(
-                    border: InputBorder.none,
-                    hintText:
-                        'Share an achievement, ask a question, or encourage others...',
-                    hintStyle: TextStyle(color: Colors.white38),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    IconButton(
-                      onPressed: () {},
-                      icon: const Icon(Icons.image, color: Colors.white70),
+                    Row(
+                      children: [
+                        IconButton(
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          onPressed: () => Navigator.pop(context),
+                          icon: const Icon(Icons.arrow_back, color: Colors.white),
+                        ),
+                        const SizedBox(width: 4),
+                        const Text(
+                          'Community',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
                     ),
-                    const Spacer(),
-                    TextButton(
-                      onPressed: () => _postController.clear(),
-                      child: const Text('Cancel'),
-                    ),
-                    const SizedBox(width: 8),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF0E5469),
-                      ),
-                      onPressed: _addCommunityPost,
-                      child: const Text('Post'),
+                    const SizedBox(height: 4),
+                    const Text('Share, learn, grow together'),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: const [
+                        CommunityStat(label: '156', subLabel: 'Active Today'),
+                        CommunityStat(label: '89', subLabel: 'Posts This Week'),
+                        CommunityStat(label: '342', subLabel: 'Members'),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0E3B2E),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.white.withOpacity(0.05)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.emoji_events, color: Colors.white70),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: const [
+                          Text(
+                            'Wall of Wins 🎉',
+                            style: TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                          SizedBox(height: 4),
+                          Text('15 members completed lessons this week!'),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.auto_graph, color: Colors.white70),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: _communityFilters.map((filter) {
+                  final selected = _selectedFilter == filter;
+                  return ChoiceChip(
+                    label: Text(filter),
+                    selected: selected,
+                    backgroundColor: const Color(0xFF041D25),
+                    selectedColor: const Color(0xFF0E5469),
+                    labelStyle: const TextStyle(color: Colors.white),
+                    onSelected: (_) => setState(() => _selectedFilter = filter),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF041D25),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: _postController,
+                      minLines: 2,
+                      maxLines: 4,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        hintText:
+                            'Share an achievement, ask a question, or encourage others...',
+                        hintStyle: TextStyle(color: Colors.white38),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        IconButton(
+                          onPressed: () {},
+                          icon: const Icon(Icons.image, color: Colors.white70),
+                        ),
+                        const Spacer(),
+                        TextButton(
+                          onPressed: () => _postController.clear(),
+                          child: const Text('Cancel'),
+                        ),
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF0E5469),
+                          ),
+                          onPressed: _addCommunityPost,
+                          child: const Text('Post'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              Column(
+                children: _filteredCommunityPosts
+                    .map(_buildCommunityPostCard)
+                    .toList(),
+              ),
+              const SizedBox(height: 16),
+              _buildGuidelinesCard(),
+            ],
           ),
-          const SizedBox(height: 16),
-          Column(
-            children: _filteredCommunityPosts
-                .map(_buildCommunityPostCard)
-                .toList(),
-          ),
-          const SizedBox(height: 16),
-          _buildGuidelinesCard(),
-        ],
+        ),
+      ),
+      bottomNavigationBar: AppBottomNavigationBar(
+        currentIndex: 3,
+        moreOptions: _buildMoreOptions(context),
       ),
     );
   }

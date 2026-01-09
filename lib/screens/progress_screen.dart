@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../screens/help_screen.dart';
+import '../screens/privacy_screen.dart';
 import '../theme/theme_colors.dart';
+import '../widgets/app_bottom_navigation_bar.dart';
+import '../widgets/app_more_options.dart';
+import 'vocab_screen.dart';
 
 class ProgressScreen extends StatelessWidget {
   const ProgressScreen({super.key});
@@ -48,29 +53,143 @@ class ProgressScreen extends StatelessWidget {
     {'title': 'Help 5 community members', 'value': 0.6, 'target': '3/5'},
   ];
 
+  static const earnedBadges = [
+    {
+      'title': 'First Steps',
+      'subtitle': 'Complete your first lesson',
+      'icon': LucideIcons.graduationCap,
+    },
+    {
+      'title': 'Voice Found',
+      'subtitle': 'Share your first community post',
+      'icon': LucideIcons.messageCircle,
+    },
+    {
+      'title': 'Week Warrior',
+      'subtitle': '7 days of learning',
+      'icon': LucideIcons.flame,
+    },
+    {
+      'title': 'Phrase Builder',
+      'subtitle': 'Learn 50 phrases',
+      'icon': LucideIcons.bookOpen,
+    },
+    {
+      'title': 'Vocabulary Master',
+      'subtitle': 'Learn 100 phrases',
+      'icon': LucideIcons.trophy,
+    },
+    {
+      'title': 'Helping Hand',
+      'subtitle': 'Help 5 community members',
+      'icon': LucideIcons.heart,
+    },
+  ];
+
+  static const lockedBadges = [
+    {
+      'title': 'Horse Whisperer',
+      'subtitle': 'All horse care lessons',
+      'icon': Icons.pets,
+    },
+    {
+      'title': 'Safety Champion',
+      'subtitle': 'All safety lessons',
+      'icon': LucideIcons.shieldCheck,
+    },
+    {
+      'title': 'Dedicated Learner',
+      'subtitle': '30-day streak',
+      'icon': LucideIcons.clock3,
+    },
+    {
+      'title': 'Master Learner',
+      'subtitle': 'Complete every lesson',
+      'icon': LucideIcons.star,
+    },
+  ];
+
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildHeader(),
-          const SizedBox(height: 20),
-          _buildStatsGrid(),
-          const SizedBox(height: 20),
-          _buildWeekChart(),
-          const SizedBox(height: 20),
-          _buildSkillProgress(),
-          const SizedBox(height: 20),
-          _buildAchievements(),
-          const SizedBox(height: 20),
-          _buildMonthlyGoals(),
-          const SizedBox(height: 20),
-          _buildKeepGoing(),
-          const SizedBox(height: 40),
-        ],
+    return Scaffold(
+      backgroundColor: ThemeColors.primary,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeader(),
+              const SizedBox(height: 20),
+              _buildBadgeSection('Earned', earnedBadges),
+              const SizedBox(height: 20),
+              _buildBadgeSection('Keep Going', lockedBadges, locked: true),
+              const SizedBox(height: 20),
+              _buildStatsGrid(),
+              const SizedBox(height: 20),
+              _buildWeekChart(),
+              const SizedBox(height: 20),
+              _buildSkillProgress(),
+              const SizedBox(height: 20),
+              _buildAchievements(),
+              const SizedBox(height: 20),
+              _buildMonthlyGoals(),
+              const SizedBox(height: 20),
+              _buildKeepGoing(),
+              const SizedBox(height: 40),
+            ],
+          ),
+        ),
+      ),
+      bottomNavigationBar: AppBottomNavigationBar(
+        currentIndex: 3,
+        moreOptions: _buildMoreOptions(context),
       ),
     );
+  }
+
+  List<MoreOption> _buildMoreOptions(BuildContext context) {
+    return [
+      MoreOption(
+        label: 'Progress',
+        icon: LucideIcons.activity,
+        onTap: () {
+          Navigator.pop(context);
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const ProgressScreen()),
+          );
+        },
+      ),
+      MoreOption(
+        label: 'Vocab & Phrases',
+        icon: Icons.book,
+        onTap: () {
+          Navigator.pop(context);
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const VocabScreen()),
+          );
+        },
+      ),
+      MoreOption(
+        label: 'Help & Support',
+        icon: Icons.headset,
+        onTap: () {
+          Navigator.pop(context);
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const HelpScreen()),
+          );
+        },
+      ),
+      MoreOption(
+        label: 'Privacy Policy',
+        icon: Icons.shield,
+        onTap: () {
+          Navigator.pop(context);
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const PrivacyScreen()),
+          );
+        },
+      ),
+    ];
   }
 
   Widget _buildHeader() {
@@ -91,12 +210,16 @@ class ProgressScreen extends StatelessWidget {
             children: const [
               Icon(LucideIcons.arrowLeft, color: Colors.black),
               SizedBox(width: 12),
-              Text(
-                'Your Progress',
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
+              Expanded(
+                child: Text(
+                  'Your Progress',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
@@ -107,21 +230,13 @@ class ProgressScreen extends StatelessWidget {
             style: TextStyle(color: Colors.black87, fontSize: 16),
           ),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              _buildTab('Overview', true),
-              const SizedBox(width: 8),
-              _buildTab('Badges', false),
-              const SizedBox(width: 8),
-              _buildTab('Shop', false),
-            ],
-          ),
+          _buildBadgeTabs(),
         ],
       ),
     );
   }
 
-  Widget _buildTab(String label, bool active) {
+  Widget _buildTab(String label, IconData icon, bool active) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
@@ -131,14 +246,117 @@ class ProgressScreen extends StatelessWidget {
           border: Border.all(color: active ? Colors.white : Colors.transparent),
         ),
         child: Center(
-          child: Text(
-            label,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: active ? Colors.white : Colors.white70, size: 16),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  color: active ? Colors.white : Colors.white70,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBadgeTabs() {
+    return Row(
+      children: [
+        _buildTab('Overview', LucideIcons.arrowUpRight, false),
+        const SizedBox(width: 8),
+        _buildTab('Badges', LucideIcons.award, true),
+        const SizedBox(width: 8),
+        _buildTab('Shop', LucideIcons.gift, false),
+      ],
+    );
+  }
+
+  Widget _buildBadgeSection(String title, List<Map<String, dynamic>> badges,
+      {bool locked = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                locked ? LucideIcons.lock : LucideIcons.trophy,
+                color: Colors.white,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '$title (${badges.length})',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 12,
+            children: badges
+                .map((badge) => _buildBadgeCard(badge, locked: locked))
+                .toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBadgeCard(Map<String, dynamic> badge, {bool locked = false}) {
+    final iconData = badge['icon'] as IconData;
+    final backgroundColor =
+        locked ? const Color(0xFF011623) : const Color(0xFF041C26);
+    final innerCircleColor =
+        locked ? const Color(0xFF061226) : const Color(0xFF0E5469);
+
+    return Container(
+      width: 150,
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white.withOpacity(0.08)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CircleAvatar(
+            radius: 24,
+            backgroundColor: innerCircleColor,
+            child: locked
+                ? const Icon(Icons.lock, color: Colors.white70)
+                : Icon(iconData, color: Colors.white),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            badge['title'] as String,
             style: TextStyle(
-              color: active ? Colors.white : Colors.white70,
+              color: locked ? Colors.white60 : Colors.white,
               fontWeight: FontWeight.w600,
             ),
           ),
-        ),
+          const SizedBox(height: 4),
+          Text(
+            badge['subtitle'] as String,
+            style: TextStyle(
+              color: locked ? Colors.white38 : Colors.white70,
+              fontSize: 12,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import '../screens/lessons_screen.dart';
+import '../screens/speak_screen.dart';
 import '../widgets/common_widgets.dart';
+import 'vocab_topic_screen.dart';
 import '../theme/theme_colors.dart';
 import '../data/content.dart';
 import '../data/vocab_data.dart';
@@ -79,24 +82,40 @@ class HomeScreen extends StatelessWidget {
           ),
           const SizedBox(height: 18),
           Row(
-            children: const [
+            children: [
               Expanded(
-                child: HeroButton(
-                  icon: Icons.mic,
-                  label: 'Tap to Speak',
-                  subLabel: 'Instant translation',
-                  backgroundColor: Color(0xFF0E5469),
+                child: GestureDetector(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const SpeakScreen(),
+                    ),
+                  ),
+                  child: const HeroButton(
+                    icon: Icons.mic,
+                    label: 'Tap to Speak',
+                    subLabel: 'Instant translation',
+                    backgroundColor: Color(0xFF0E5469),
+                  ),
                 ),
               ),
-              SizedBox(width: 14),
+              const SizedBox(width: 14),
               Expanded(
-                child: HeroButton(
-                  icon: Icons.play_arrow,
-                  label: 'Continue Learning',
-                  subLabel: 'Next: Horse Care',
-                  backgroundColor: Color(0xFFFACC47),
-                  iconColor: Colors.black,
-                  textColor: Colors.black,
+                child: GestureDetector(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const LessonsScreen(),
+                    ),
+                  ),
+                  child: const HeroButton(
+                    icon: Icons.play_arrow,
+                    label: 'Continue Learning',
+                    subLabel: 'Next: Horse Care',
+                    backgroundColor: Color(0xFFFACC47),
+                    iconColor: Colors.black,
+                    textColor: Colors.black,
+                  ),
                 ),
               ),
             ],
@@ -205,7 +224,7 @@ class HomeScreen extends StatelessWidget {
   Widget _buildPhraseCarousel() {
     final featuredTopics = vocabTopics.take(6).toList();
     return SizedBox(
-      height: 140,
+      height: 200,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: featuredTopics.length,
@@ -213,38 +232,49 @@ class HomeScreen extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 4),
         itemBuilder: (context, index) {
           final topic = featuredTopics[index];
-          return Container(
-            width: 160,
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 14),
-            decoration: BoxDecoration(
-              color: const Color(0xFF041E25),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.white.withOpacity(0.06)),
+          return InkWell(
+            borderRadius: BorderRadius.circular(20),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => VocabTopicScreen(topic: topic)),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.white10,
-                    borderRadius: BorderRadius.circular(12),
+            child: Container(
+              width: 160,
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 14),
+              decoration: BoxDecoration(
+                color: const Color(0xFF041E25),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.white.withOpacity(0.06)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.white10,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(topic.icon, style: const TextStyle(fontSize: 20)),
                   ),
-                  child: Text(topic.icon, style: const TextStyle(fontSize: 20)),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  topic.title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
+                  const SizedBox(height: 12),
+                  Text(
+                    topic.title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  topic.description,
-                  style: const TextStyle(color: Colors.white70, fontSize: 12),
-                ),
-              ],
+                  const SizedBox(height: 6),
+                  Text(
+                    topic.description,
+                    style: const TextStyle(color: Colors.white70, fontSize: 12),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
             ),
           );
         },

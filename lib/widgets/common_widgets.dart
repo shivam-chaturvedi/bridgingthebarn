@@ -114,7 +114,7 @@ class CommunityStat extends StatelessWidget {
         children: [
           Text(
             label,
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 4),
           Text(subLabel, style: const TextStyle(color: Colors.white70)),
