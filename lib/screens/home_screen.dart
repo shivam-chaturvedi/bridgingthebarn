@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 import '../navigation/app_navigation_helpers.dart';
+import '../providers/app_language_provider.dart';
 import '../screens/speak_screen.dart';
+import '../services/tts_service.dart';
+import '../services/translation_manager.dart';
 import '../widgets/common_widgets.dart';
 import 'vocab_topic_screen.dart';
 import '../theme/theme_colors.dart';
@@ -9,6 +14,20 @@ import '../data/vocab_data.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
+  static final TtsService _ttsService = TtsService();
+
+  Future<void> _speakText(BuildContext context, String text) async {
+    if (text.isEmpty) return;
+    final provider = context.read<AppLanguageProvider>();
+    provider.translationStarted();
+    try {
+      final translated =
+          await TranslationManager.instance.translate(text, provider.language);
+      await _ttsService.speak(translated, provider.language.locale);
+    } finally {
+      provider.translationFinished();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +48,9 @@ class HomeScreen extends StatelessWidget {
           const SizedBox(height: 30),
           _buildSectionTitle('Quick Practice'),
           const SizedBox(height: 12),
-          ...quickPhrasesData.take(4).map(_buildQuickPracticeCard),
+          ...quickPhrasesData.take(4).map(
+            (data) => _buildQuickPracticeCard(context, data),
+          ),
           const SizedBox(height: 30),
           _buildSectionTitle('Wall of Wins', actionLabel: 'View All'),
           const SizedBox(height: 12),
@@ -221,7 +242,7 @@ class HomeScreen extends StatelessWidget {
   Widget _buildPhraseCarousel() {
     final featuredTopics = vocabTopics.take(6).toList();
     return SizedBox(
-      height: 240,
+      height: 205,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: featuredTopics.length,
@@ -235,9 +256,9 @@ class HomeScreen extends StatelessWidget {
               context,
               MaterialPageRoute(builder: (_) => VocabTopicScreen(topic: topic)),
             ),
-            child: Container(
-              width: 170,
-              padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+              child: Container(
+                width: 170,
+                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
               decoration: BoxDecoration(
                 color: const Color(0xFF041E25),
                 borderRadius: BorderRadius.circular(20),
@@ -279,37 +300,43 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildQuickPracticeCard(Map<String, String> data) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 18),
-      decoration: BoxDecoration(
+  Widget _buildQuickPracticeCard(BuildContext context, Map<String, String> data) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: InkWell(
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withOpacity(0.04)),
-        color: const Color(0xFF03212C),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        onTap: () => _speakText(context, data['label']!),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: Colors.white.withOpacity(0.04)),
+            color: const Color(0xFF03212C),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                data['label']!,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    data['label']!,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    data['translation']!,
+                    style: const TextStyle(color: Colors.white70),
+                  ),
+                ],
               ),
-              const SizedBox(height: 4),
-              Text(
-                data['translation']!,
-                style: const TextStyle(color: Colors.white70),
-              ),
+              const Icon(Icons.volume_up, color: Colors.white38),
             ],
           ),
-          const Icon(Icons.volume_up, color: Colors.white38),
-        ],
+        ),
       ),
     );
   }

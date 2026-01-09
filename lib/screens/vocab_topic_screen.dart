@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import 'package:provider/provider.dart';
+
 import '../data/vocab_data.dart';
+import '../providers/app_language_provider.dart';
 import '../screens/community_screen.dart';
 import '../screens/help_screen.dart';
 import '../screens/privacy_screen.dart';
 import '../screens/progress_screen.dart';
 import '../screens/vocab_screen.dart';
 import '../services/tts_service.dart';
-import '../utils/language_utils.dart';
+import '../services/translation_manager.dart';
 import '../widgets/app_bottom_navigation_bar.dart';
 import '../widgets/app_more_options.dart';
 import '../widgets/translatable_text.dart';
@@ -19,8 +22,16 @@ class VocabTopicScreen extends StatelessWidget {
   final VocabTopic topic;
   final TtsService _ttsService = TtsService();
 
-  void _playText(String text) {
-    _ttsService.speak(text, LanguageUtils.defaultLanguage.locale);
+  Future<void> _playText(BuildContext context, String text) async {
+    final provider = context.read<AppLanguageProvider>();
+    provider.translationStarted();
+    try {
+      final translated =
+          await TranslationManager.instance.translate(text, provider.language);
+      await _ttsService.speak(translated, provider.language.locale);
+    } finally {
+      provider.translationFinished();
+    }
   }
 
   @override
@@ -51,7 +62,7 @@ class VocabTopicScreen extends StatelessWidget {
                 children: topic.vocab
                     .map(
                       (word) => GestureDetector(
-                        onTap: () => _playText(word),
+                        onTap: () => _playText(context, word),
                         child: Container(
                           padding: const EdgeInsets.all(12),
                           width: vocabTileWidth,
@@ -95,10 +106,10 @@ class VocabTopicScreen extends StatelessWidget {
                 child: ListView.separated(
                   itemCount: topic.phrases.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 10),
-                  itemBuilder: (context, index) {
+                    itemBuilder: (context, index) {
                     final phrase = topic.phrases[index];
                     return GestureDetector(
-                      onTap: () => _playText(phrase),
+                      onTap: () => _playText(context, phrase),
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                           vertical: 12,

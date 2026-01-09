@@ -23,15 +23,21 @@ Future<void> showAppMoreOptions(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
     builder: (context) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: options
-              .map(
-                (option) => _MoreOptionTile(option: option),
-              )
-              .toList(),
+      return SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ...options
+                  .map(
+                    (option) => _MoreOptionTile(option: option),
+                  )
+                  .toList(),
+              const SizedBox(height: 16),
+            ],
+          ),
         ),
       );
     },

@@ -51,6 +51,7 @@ class BridgingBarnApp extends StatelessWidget {
           scaffoldBackgroundColor: ThemeColors.primary,
           fontFamily: 'SFProDisplay',
         ),
+        builder: (context, child) => SafeArea(child: child ?? const SizedBox.shrink()),
         home: const MainNavigation(),
       ),
     );

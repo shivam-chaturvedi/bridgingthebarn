@@ -21,6 +21,7 @@ class VocabScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final languageProvider = context.watch<AppLanguageProvider>();
+    final translationActive = languageProvider.translationInProgress;
     return Scaffold(
       backgroundColor: ThemeColors.primary,
       appBar: AppBar(
@@ -32,43 +33,48 @@ class VocabScreen extends StatelessWidget {
         elevation: 0,
         actions: const [SettingsActionButton()],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (languageProvider.translationInProgress) ...[
-              _buildTranslationProgressBar(),
-              const SizedBox(height: 12),
-            ],
-            const TranslatableText(
-              text: 'Phrases Learned 0/84',
-              style: TextStyle(color: Colors.white70),
+      body: Stack(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (languageProvider.translationInProgress) ...[
+                  _buildTranslationProgressBar(),
+                  const SizedBox(height: 12),
+                ],
+                const TranslatableText(
+                  text: 'Phrases Learned 0/84',
+                  style: TextStyle(color: Colors.white70),
+                ),
+                const SizedBox(height: 4),
+                const TranslatableText(text: '0% Complete', style: TextStyle(color: Colors.white38)),
+                const SizedBox(height: 16),
+                const TranslatableText(
+                  text: 'Browse by Category',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: ListView.separated(
+                    itemCount: vocabTopics.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      final topic = vocabTopics[index];
+                      return _CategoryCard(topic: topic);
+                    },
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 4),
-            const TranslatableText(text: '0% Complete', style: TextStyle(color: Colors.white38)),
-            const SizedBox(height: 16),
-            const TranslatableText(
-              text: 'Browse by Category',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Expanded(
-              child: ListView.separated(
-                itemCount: vocabTopics.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  final topic = vocabTopics[index];
-                  return _CategoryCard(topic: topic);
-                },
-              ),
-            ),
-          ],
-        ),
+          ),
+          if (translationActive) _buildTranslationOverlay(),
+        ],
       ),
       bottomNavigationBar: AppBottomNavigationBar(
         currentIndex: 3,
@@ -148,6 +154,41 @@ class VocabScreen extends StatelessWidget {
             color: Color(0xFF0E5469),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildTranslationOverlay() {
+    return Positioned.fill(
+      child: IgnorePointer(
+        ignoring: true,
+        child: Container(
+          color: Colors.black.withOpacity(0.65),
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const CircularProgressIndicator(
+                  color: Color(0xFF0E5469),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Translation in progress',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'We are translating the vocab list in the background. It will keep working while you explore.',
+                  style: TextStyle(color: Colors.white70),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
