@@ -36,7 +36,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
           'Today I read a message to my daughter in English for the first time! She was so proud of me.',
       'likes': 24,
       'comments': 2,
-      'commentsList': [
+      'commentsList': <Map<String, String>>[
         {'author': 'Arjun', 'text': 'Amazing job!', 'time': '1 hour ago'},
         {'author': 'Meena', 'text': 'So proud of you!', 'time': '30 min ago'},
       ],
@@ -50,7 +50,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
           "Question: What's the best way to explain 'hoof care' to the owner? I always get confused with the words.",
       'likes': 12,
       'comments': 1,
-      'commentsList': [
+      'commentsList': <Map<String, String>>[
         {
           'author': 'Krishnan',
           'text': 'Use simple words like “hoof” and “care”.',
@@ -67,7 +67,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
           'Completed my first week of lessons! 50 phrases learned. Small steps, but I feel more confident already!',
       'likes': 31,
       'comments': 1,
-      'commentsList': [
+      'commentsList': <Map<String, String>>[
         {'author': 'Lakshmi', 'text': 'Keep it up! 💪', 'time': '12 hours ago'},
       ],
     },
@@ -92,7 +92,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
         'content': text,
         'likes': 0,
         'comments': 0,
-        'commentsList': [],
+        'commentsList': <Map<String, String>>[],
       });
       _postController.clear();
       _selectedFilter = 'All';
