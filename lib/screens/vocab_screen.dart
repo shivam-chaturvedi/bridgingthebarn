@@ -159,34 +159,36 @@ class VocabScreen extends StatelessWidget {
   }
 
   Widget _buildTranslationOverlay() {
-    return Positioned.fill(
+    return Positioned(
+      top: 0,
+      left: 0,
+      right: 0,
       child: IgnorePointer(
         ignoring: true,
         child: Container(
-          color: Colors.black.withOpacity(0.65),
-          child: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const CircularProgressIndicator(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.8),
+            borderRadius: const BorderRadius.vertical(
+              bottom: Radius.circular(16),
+            ),
+          ),
+          child: Row(
+            children: const [
+              SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.2,
                   color: Color(0xFF0E5469),
                 ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Translation in progress',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'We are translating the vocab list in the background. It will keep working while you explore.',
-                  style: TextStyle(color: Colors.white70),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
+              ),
+              SizedBox(width: 12),
+              Text(
+                'Translation in progress',
+                style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600),
+              ),
+            ],
           ),
         ),
       ),

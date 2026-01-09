@@ -367,6 +367,7 @@ class _SpeakScreenBody extends StatelessWidget {
                               : null,
                           onTap: () {
                             provider.setTargetLanguage(language);
+                            context.read<AppLanguageProvider>().setLanguage(language);
                             Navigator.pop(context);
                           },
                         );
