@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:provider/provider.dart';
 
 import '../data/vocab_data.dart';
+import '../providers/app_language_provider.dart';
 import '../screens/community_screen.dart';
 import '../screens/help_screen.dart';
 import '../screens/privacy_screen.dart';
@@ -18,6 +20,7 @@ class VocabScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final languageProvider = context.watch<AppLanguageProvider>();
     return Scaffold(
       backgroundColor: ThemeColors.primary,
       appBar: AppBar(
@@ -34,6 +37,10 @@ class VocabScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (languageProvider.translationInProgress) ...[
+              _buildTranslationProgressBar(),
+              const SizedBox(height: 12),
+            ],
             const TranslatableText(
               text: 'Phrases Learned 0/84',
               style: TextStyle(color: Colors.white70),
@@ -113,6 +120,36 @@ class VocabScreen extends StatelessWidget {
         },
       ),
     ];
+  }
+
+  Widget _buildTranslationProgressBar() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white12,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: const [
+              Icon(Icons.translate, color: Colors.white70, size: 18),
+              SizedBox(width: 8),
+              Text(
+                'Translation in progress',
+                style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          const LinearProgressIndicator(
+            color: Color(0xFF0E5469),
+          ),
+        ],
+      ),
+    );
   }
 
 }

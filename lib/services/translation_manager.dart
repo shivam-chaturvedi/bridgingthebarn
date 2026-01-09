@@ -8,22 +8,37 @@ class TranslationManager {
 
   final TranslationService _translationService = TranslationService();
   final Map<String, Map<String, String>> _cache = {};
+  final Map<String, Future<String>> _pendingRequests = {};
+
+  String? cached(String text, LanguageDefinition language) {
+    final languageCache = _cache[language.code];
+    return languageCache?[text];
+  }
 
   Future<String> translate(String text, LanguageDefinition language) async {
     if (text.isEmpty) return text;
     if (language.code == 'en') return text;
 
-    final languageCache = _cache.putIfAbsent(language.code, () => {});
-    if (languageCache.containsKey(text)) {
-      return languageCache[text]!;
+    final cacheKey = '${language.code}|$text';
+    if (_cache[language.code]?.containsKey(text) ?? false) {
+      return _cache[language.code]![text]!;
+    }
+    if (_pendingRequests.containsKey(cacheKey)) {
+      return _pendingRequests[cacheKey]!;
     }
 
-    try {
-      final result = await _translationService.translate(text, language.mlKitLanguage);
+    final languageCache = _cache.putIfAbsent(language.code, () => {});
+    final request = _translationService
+        .translate(text, language.mlKitLanguage)
+        .then((result) {
       languageCache[text] = result;
+      _pendingRequests.remove(cacheKey);
       return result;
-    } catch (_) {
+    }).catchError((_) {
+      _pendingRequests.remove(cacheKey);
       return text;
-    }
+    });
+    _pendingRequests[cacheKey] = request;
+    return request;
   }
 }

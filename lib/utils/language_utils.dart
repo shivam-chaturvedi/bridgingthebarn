@@ -77,5 +77,5 @@ class LanguageUtils {
   ];
 
   static LanguageDefinition get defaultLanguage =>
-      languages.firstWhere((l) => l.code == 'en');
+      languages.firstWhere((l) => l.code == 'ta');
 }
