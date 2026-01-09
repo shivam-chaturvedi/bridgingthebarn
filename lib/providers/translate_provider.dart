@@ -11,7 +11,8 @@ class TranslateProvider extends ChangeNotifier {
   TranslateProvider({
     required this.translationService,
     required this.ttsService,
-  }) {
+    LanguageDefinition? initialLanguage,
+  }) : targetLanguage = initialLanguage ?? LanguageUtils.defaultLanguage {
     _initSpeech();
   }
 
@@ -25,7 +26,7 @@ class TranslateProvider extends ChangeNotifier {
   bool isPlaying = false;
   String sourceText = '';
   String translatedText = '';
-  LanguageDefinition targetLanguage = LanguageUtils.defaultLanguage;
+  LanguageDefinition targetLanguage;
 
   Future<void> _initSpeech() async {
     await _speech.initialize();

@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import '../screens/lessons_screen.dart';
+import '../navigation/app_navigation_helpers.dart';
 import '../screens/speak_screen.dart';
 import '../widgets/common_widgets.dart';
 import 'vocab_topic_screen.dart';
 import '../theme/theme_colors.dart';
 import '../data/content.dart';
 import '../data/vocab_data.dart';
-import '../widgets/settings_action_button.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -68,7 +67,6 @@ class HomeScreen extends StatelessWidget {
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
                 ),
               ),
-              const SettingsActionButton(),
             ],
           ),
           const SizedBox(height: 4),
@@ -106,12 +104,7 @@ class HomeScreen extends StatelessWidget {
               const SizedBox(width: 14),
               Expanded(
                 child: GestureDetector(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const LessonsScreen(),
-                    ),
-                  ),
+                  onTap: () => navigateToTab(context, 2),
                   child: const HeroButton(
                     icon: Icons.play_arrow,
                     label: 'Continue Learning',

@@ -7,12 +7,10 @@ import '../screens/help_screen.dart';
 import '../screens/privacy_screen.dart';
 import '../screens/progress_screen.dart';
 import '../screens/vocab_screen.dart';
-import '../services/permission_service.dart';
 import '../theme/theme_colors.dart';
 import '../widgets/app_bottom_navigation_bar.dart';
 import '../widgets/app_more_options.dart';
 import '../widgets/common_widgets.dart';
-import '../widgets/settings_action_button.dart';
 
 class CommunityScreen extends StatefulWidget {
   const CommunityScreen({super.key});
@@ -25,7 +23,9 @@ class _CommunityScreenState extends State<CommunityScreen> {
   final TextEditingController _postController = TextEditingController();
   final TextEditingController _commentController = TextEditingController();
   final List<String> _communityFilters = ['All', 'Questions', 'Wins', 'Tips'];
+  final List<String> _postCategories = ['Tips', 'Questions', 'Wins'];
   String _selectedFilter = 'All';
+  String _selectedPostCategory = 'Tips';
   final List<Map<String, Object>> _communityPosts = [
     {
       'id': 1,
@@ -88,7 +88,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
         'id': DateTime.now().millisecondsSinceEpoch,
         'author': 'You',
         'time': 'Just now',
-        'type': _selectedFilter == 'All' ? 'Tips' : _selectedFilter,
+        'type': _selectedPostCategory,
         'content': text,
         'likes': 0,
         'comments': 0,
@@ -248,15 +248,6 @@ class _CommunityScreenState extends State<CommunityScreen> {
     ];
   }
 
-  Future<void> _handleAddImage() async {
-    if (!await PermissionService.ensureGalleryPermission(context)) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Gallery permission granted. Image upload coming soon.'),
-      ),
-    );
-  }
-
   @override
   void dispose() {
     _postController.dispose();
@@ -301,7 +292,6 @@ class _CommunityScreenState extends State<CommunityScreen> {
                             ),
                           ),
                         ),
-                        const SettingsActionButton(),
                       ],
                     ),
                     const SizedBox(height: 4),
@@ -385,12 +375,31 @@ class _CommunityScreenState extends State<CommunityScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Category',
+                        style: TextStyle(color: Colors.white54),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      children: _postCategories.map((category) {
+                        final selected = _selectedPostCategory == category;
+                        return ChoiceChip(
+                          label: Text(category),
+                          selected: selected,
+                          backgroundColor: const Color(0xFF041D25),
+                          selectedColor: const Color(0xFF0E5469),
+                          labelStyle: TextStyle(color: selected ? Colors.white : Colors.white70),
+                          onSelected: (_) => setState(() => _selectedPostCategory = category),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 12),
                     Row(
                       children: [
-                        IconButton(
-                          onPressed: _handleAddImage,
-                          icon: const Icon(Icons.image, color: Colors.white70),
-                        ),
                         const Spacer(),
                         TextButton(
                           onPressed: () => _postController.clear(),

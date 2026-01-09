@@ -10,6 +10,7 @@ import '../theme/theme_colors.dart';
 import '../widgets/app_bottom_navigation_bar.dart';
 import '../widgets/app_more_options.dart';
 import '../widgets/settings_action_button.dart';
+import '../widgets/translatable_text.dart';
 import 'vocab_topic_screen.dart';
 
 class VocabScreen extends StatelessWidget {
@@ -21,7 +22,10 @@ class VocabScreen extends StatelessWidget {
       backgroundColor: ThemeColors.primary,
       appBar: AppBar(
         backgroundColor: ThemeColors.primary,
-        title: const Text('Vocab & Phrases'),
+        title: const TranslatableText(
+          text: 'Vocab & Phrases',
+          style: TextStyle(fontSize: 20),
+        ),
         elevation: 0,
         actions: const [SettingsActionButton()],
       ),
@@ -30,15 +34,15 @@ class VocabScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Phrases Learned 0/84',
+            const TranslatableText(
+              text: 'Phrases Learned 0/84',
               style: TextStyle(color: Colors.white70),
             ),
             const SizedBox(height: 4),
-            const Text('0% Complete', style: TextStyle(color: Colors.white38)),
+            const TranslatableText(text: '0% Complete', style: TextStyle(color: Colors.white38)),
             const SizedBox(height: 16),
-            const Text(
-              'Browse by Category',
+            const TranslatableText(
+              text: 'Browse by Category',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 20,
@@ -142,23 +146,23 @@ class _CategoryCard extends StatelessWidget {
             ),
             const SizedBox(width: 16),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    topic.title,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TranslatableText(
+                  text: topic.title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    topic.description,
-                    style: const TextStyle(color: Colors.white60),
-                  ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 4),
+                TranslatableText(
+                  text: topic.description,
+                  style: const TextStyle(color: Colors.white60),
+                ),
+              ],
+            ),
             ),
             const Icon(
               Icons.arrow_forward_ios,

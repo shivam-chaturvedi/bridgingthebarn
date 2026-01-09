@@ -8,7 +8,6 @@ import '../screens/vocab_screen.dart';
 import '../theme/theme_colors.dart';
 import '../widgets/app_bottom_navigation_bar.dart';
 import '../widgets/app_more_options.dart';
-import '../widgets/settings_action_button.dart';
 
 class HelpScreen extends StatelessWidget {
   const HelpScreen({super.key});
@@ -21,7 +20,6 @@ class HelpScreen extends StatelessWidget {
         backgroundColor: ThemeColors.primary,
         elevation: 0,
         title: const Text('Help & Support'),
-        actions: const [SettingsActionButton()],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),

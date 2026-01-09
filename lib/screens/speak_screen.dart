@@ -1,22 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../providers/app_language_provider.dart';
 import '../providers/translate_provider.dart';
 import '../services/translation_service.dart';
 import '../services/tts_service.dart';
 import '../theme/theme_colors.dart';
 import '../utils/language_utils.dart';
-import '../widgets/settings_action_button.dart';
 
 class SpeakScreen extends StatelessWidget {
   const SpeakScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final language = context.read<AppLanguageProvider>().language;
     return ChangeNotifierProvider(
       create: (_) => TranslateProvider(
         translationService: TranslationService(),
         ttsService: TtsService(),
+        initialLanguage: language,
       ),
       child: const _SpeakScreenBody(),
     );
@@ -29,13 +31,18 @@ class _SpeakScreenBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<TranslateProvider>();
+    final appLanguage = context.watch<AppLanguageProvider>().language;
+    if (provider.targetLanguage.code != appLanguage.code) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        provider.setTargetLanguage(appLanguage);
+      });
+    }
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: ThemeColors.primary,
         elevation: 0,
         title: const Text('Speak & Translate'),
-        actions: const [SettingsActionButton()],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),

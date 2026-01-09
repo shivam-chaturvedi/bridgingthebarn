@@ -2,14 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../screens/community_screen.dart';
+import '../navigation/app_navigation_helpers.dart';
 import '../screens/help_screen.dart';
-import '../screens/lessons_screen.dart';
 import '../screens/privacy_screen.dart';
 import '../screens/vocab_screen.dart';
 import '../theme/theme_colors.dart';
 import '../widgets/app_bottom_navigation_bar.dart';
 import '../widgets/app_more_options.dart';
-import '../widgets/settings_action_button.dart';
 
 class ProgressScreen extends StatefulWidget {
   const ProgressScreen({super.key});
@@ -245,7 +244,6 @@ class _ProgressScreenState extends State<ProgressScreen> {
                   ),
                 ),
               ),
-              SettingsActionButton(),
             ],
           ),
           const SizedBox(height: 6),
@@ -613,10 +611,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
               minimumSize: const Size.fromHeight(48),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
             ),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const LessonsScreen()),
-            ),
+            onPressed: () => navigateToTab(context, 2),
             child: const Center(
               child: Text('Continue Learning', style: TextStyle(fontWeight: FontWeight.w600)),
             ),

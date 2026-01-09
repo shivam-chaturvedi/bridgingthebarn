@@ -11,7 +11,7 @@ import '../services/tts_service.dart';
 import '../utils/language_utils.dart';
 import '../widgets/app_bottom_navigation_bar.dart';
 import '../widgets/app_more_options.dart';
-import '../widgets/settings_action_button.dart';
+import '../widgets/translatable_text.dart';
 
 class VocabTopicScreen extends StatelessWidget {
   VocabTopicScreen({required this.topic, super.key});
@@ -32,8 +32,7 @@ class VocabTopicScreen extends StatelessWidget {
       backgroundColor: const Color(0xFF031824),
       appBar: AppBar(
         backgroundColor: const Color(0xFF041B24),
-        title: Text(topic.title),
-        actions: const [SettingsActionButton()],
+        title: TranslatableText(text: topic.title),
       ),
       body: SafeArea(
         child: Padding(
@@ -41,10 +40,10 @@ class VocabTopicScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Key Vocabulary',
-                style: TextStyle(color: Colors.white70, fontSize: 18),
-              ),
+            const TranslatableText(
+              text: 'Key Vocabulary',
+              style: TextStyle(color: Colors.white70, fontSize: 18),
+            ),
               const SizedBox(height: 12),
               Wrap(
                 spacing: 12,
@@ -63,23 +62,23 @@ class VocabTopicScreen extends StatelessWidget {
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                word,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
+                              children: [
+                                TranslatableText(
+                                  text: word,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(height: 4),
-                              const Text(
-                                'Translation / Explanation',
-                                style: TextStyle(
-                                  color: Colors.white54,
-                                  fontSize: 12,
+                                const SizedBox(height: 4),
+                                const TranslatableText(
+                                  text: 'Translation / Explanation',
+                                  style: TextStyle(
+                                    color: Colors.white54,
+                                    fontSize: 12,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
                           ),
                         ),
                       ),
@@ -87,10 +86,10 @@ class VocabTopicScreen extends StatelessWidget {
                     .toList(),
               ),
               const SizedBox(height: 20),
-              const Text(
-                'Essential Phrases',
-                style: TextStyle(color: Colors.white70, fontSize: 18),
-              ),
+            const TranslatableText(
+              text: 'Essential Phrases',
+              style: TextStyle(color: Colors.white70, fontSize: 18),
+            ),
               const SizedBox(height: 12),
               Expanded(
                 child: ListView.separated(
@@ -118,13 +117,13 @@ class VocabTopicScreen extends StatelessWidget {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    phrase,
+                                  TranslatableText(
+                                    text: phrase,
                                     style: const TextStyle(color: Colors.white),
                                   ),
                                   const SizedBox(height: 4),
-                                  const Text(
-                                    'Translation / explanation',
+                                  const TranslatableText(
+                                    text: 'Translation / explanation',
                                     style: TextStyle(
                                       color: Colors.white60,
                                       fontSize: 12,
@@ -151,12 +150,12 @@ class VocabTopicScreen extends StatelessWidget {
                   color: const Color(0xFF0E5469),
                   borderRadius: BorderRadius.circular(18),
                 ),
-                child: const Center(
-                  child: Text(
-                    'Tap to hear audio',
-                    style: TextStyle(color: Colors.white),
-                  ),
+              child: const Center(
+                child: TranslatableText(
+                  text: 'Tap to hear audio',
+                  style: TextStyle(color: Colors.white),
                 ),
+              ),
               ),
             ],
           ),

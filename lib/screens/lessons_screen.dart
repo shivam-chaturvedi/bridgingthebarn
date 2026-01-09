@@ -2,15 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../data/content.dart';
-import '../screens/community_screen.dart';
-import '../screens/help_screen.dart';
-import '../screens/privacy_screen.dart';
-import '../screens/progress_screen.dart';
-import '../screens/vocab_screen.dart';
 import '../theme/theme_colors.dart';
-import '../widgets/app_bottom_navigation_bar.dart';
-import '../widgets/app_more_options.dart';
-import '../widgets/settings_action_button.dart';
 
 class LessonsScreen extends StatefulWidget {
   const LessonsScreen({super.key});
@@ -50,10 +42,6 @@ class _LessonsScreenState extends State<LessonsScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: AppBottomNavigationBar(
-        currentIndex: 2,
-        moreOptions: _buildMoreOptions(context),
-      ),
     );
   }
 
@@ -71,18 +59,16 @@ class _LessonsScreenState extends State<LessonsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              IconButton(
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-                icon: const Icon(LucideIcons.arrowLeft, color: Colors.white),
-                onPressed: () => Navigator.pop(context),
+              Row(
+                children: [
+                  IconButton(
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    icon: const Icon(LucideIcons.arrowLeft, color: Colors.white),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
               ),
-              const Spacer(),
-              const SettingsActionButton(),
-            ],
-          ),
           const SizedBox(height: 10),
           const Text(
             'Learn English',
@@ -298,58 +284,4 @@ class _LessonsScreenState extends State<LessonsScreen> {
     );
   }
 
-  List<MoreOption> _buildMoreOptions(BuildContext context) {
-    return [
-      MoreOption(
-        label: 'Community',
-        icon: LucideIcons.userPlus,
-        onTap: () {
-          Navigator.pop(context);
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const CommunityScreen()),
-          );
-        },
-      ),
-      MoreOption(
-        label: 'Progress',
-        icon: LucideIcons.activity,
-        onTap: () {
-          Navigator.pop(context);
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const ProgressScreen()),
-          );
-        },
-      ),
-      MoreOption(
-        label: 'Vocab & Phrases',
-        icon: LucideIcons.bookOpen,
-        onTap: () {
-          Navigator.pop(context);
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const VocabScreen()),
-          );
-        },
-      ),
-      MoreOption(
-        label: 'Help & Support',
-        icon: LucideIcons.headset,
-        onTap: () {
-          Navigator.pop(context);
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const HelpScreen()),
-          );
-        },
-      ),
-      MoreOption(
-        label: 'Privacy Policy',
-        icon: LucideIcons.shieldCheck,
-        onTap: () {
-          Navigator.pop(context);
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const PrivacyScreen()),
-          );
-        },
-      ),
-    ];
-  }
 }
