@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../navigation/app_navigation_helpers.dart';
+import '../screens/account_screen.dart';
 import '../screens/community_screen.dart';
 import '../screens/privacy_screen.dart';
 import '../screens/progress_screen.dart';
@@ -160,12 +162,24 @@ class HelpScreen extends StatelessWidget {
   List<MoreOption> _buildMoreOptions(BuildContext context) {
     return [
       MoreOption(
+        label: 'Account',
+        icon: LucideIcons.user,
+        onTap: () {
+          navigateToProtectedScreen(
+            context: context,
+            feature: 'Account',
+            screen: const AccountScreen(),
+          );
+        },
+      ),
+      MoreOption(
         label: 'Community',
         icon: LucideIcons.userPlus,
         onTap: () {
-          Navigator.pop(context);
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const CommunityScreen()),
+          navigateToProtectedScreen(
+            context: context,
+            feature: 'Community',
+            screen: const CommunityScreen(),
           );
         },
       ),
@@ -173,9 +187,10 @@ class HelpScreen extends StatelessWidget {
         label: 'Progress',
         icon: LucideIcons.activity,
         onTap: () {
-          Navigator.pop(context);
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const ProgressScreen()),
+          navigateToProtectedScreen(
+            context: context,
+            feature: 'Progress',
+            screen: const ProgressScreen(),
           );
         },
       ),

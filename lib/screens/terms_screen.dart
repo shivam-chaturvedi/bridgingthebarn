@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../navigation/app_navigation_helpers.dart';
 import '../screens/account_screen.dart';
 import '../screens/community_screen.dart';
+import '../navigation/app_navigation_helpers.dart';
 import '../screens/help_screen.dart';
 import '../screens/progress_screen.dart';
 import '../screens/vocab_screen.dart';
@@ -11,8 +11,8 @@ import '../theme/theme_colors.dart';
 import '../widgets/app_bottom_navigation_bar.dart';
 import '../widgets/app_more_options.dart';
 
-class PrivacyScreen extends StatelessWidget {
-  const PrivacyScreen({super.key});
+class TermsScreen extends StatelessWidget {
+  const TermsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +21,7 @@ class PrivacyScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: ThemeColors.primary,
         elevation: 0,
-        title: const Text('Privacy Policy'),
+        title: const Text('Terms of Service'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -29,55 +29,49 @@ class PrivacyScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Your data, your control',
+              'Fair use for a fair community',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
             const Text(
-              'We only collect what is necessary to keep your experience safe, personalized, and useful.',
+              'These terms guide how you and Bridging Barn show up in the app. '
+              'Posts, translations, and lessons are for personal, non-commercial use only.',
               style: TextStyle(color: Colors.white70),
             ),
             const SizedBox(height: 20),
             _buildSection(
-              title: 'What we collect',
+              title: 'Your commitment',
               children: [
-                'Profile information (name, language, email).',
-                'Lesson progress, badges, and streak data.',
-                'Optional community posts and feedback.',
+                'Be honest with your profile information.',
+                'Respect fellow learners, moderators, and support staff.',
+                'Do not post personal or confidential information.',
               ],
             ),
             _buildSection(
-              title: 'How we use it',
+              title: 'Our promise',
               children: [
-                'To personalize lessons and bookmark your spot.',
-                'To provide translation/tts services on device.',
-                'To improve the product by analyzing aggregated usage.',
+                'We will keep your data safe and deliver the experience you expect.',
+                'We reserve the right to remove content that violates these guidelines.',
+                'We support you directly from help@bridgingbarn.com.',
               ],
             ),
             _buildSection(
-              title: 'Third parties',
+              title: 'Usage & availability',
               children: [
-                'We do not sell your data.',
-                'Translation engines run locally or via trusted partners.',
-                'No analytics are attached to your identity unless you opt in.',
-              ],
-            ),
-            _buildSection(
-              title: 'Your rights',
-              children: [
-                'Download or delete your profile anytime from Settings.',
-                'Opt out of push/sms notifications always available in Settings.',
-                'Contact support@bridgingbarn.com for any privacy requests.',
+                'Access may be paused for maintenance or legal reasons.',
+                'You are responsible for keeping your sign in details secure.',
+                'We may update these terms; changes will be communicated inside the app.',
               ],
             ),
             const SizedBox(height: 20),
             const Text(
-              'Security & Storage',
+              'Dispute resolution',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 6),
             const Text(
-              'Your data is encrypted on device, backups are stored with industry standard protections, and shared content is anonymized by default.',
+              'We do our best to resolve issues quickly. '
+              'If you ever need to raise a concern, email help@bridgingbarn.com and we will respond within two business days.',
               style: TextStyle(color: Colors.white70),
             ),
           ],

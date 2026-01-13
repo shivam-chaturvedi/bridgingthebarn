@@ -41,12 +41,19 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>We use the microphone to capture your spoken practice and translate it instantly.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Camera access lets you capture images for the community and profile.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>We ask for photo access so you can share images in the community feed.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>

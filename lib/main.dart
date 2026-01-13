@@ -3,15 +3,22 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'navigation/main_navigation.dart';
 import 'providers/app_language_provider.dart';
+import 'providers/auth_provider.dart';
+import 'services/supabase_service.dart';
 import 'theme/theme_colors.dart';
 
 final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Supabase.initialize(
+    url: SupabaseService.supabaseUrl,
+    anonKey: SupabaseService.supabaseAnonKey,
+  );
   FlutterError.onError = (details) {
     if (kReleaseMode) {
       Zone.current.handleUncaughtError(
@@ -37,8 +44,11 @@ class BridgingBarnApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => AppLanguageProvider(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AppLanguageProvider()),
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+      ],
       child: MaterialApp(
         navigatorKey: _navigatorKey,
         debugShowCheckedModeBanner: false,
@@ -90,15 +100,22 @@ class AppErrorWidget extends StatelessWidget {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  'We logged it for you. Tap the button below to try again—everything should be back to normal.',
-                  style: TextStyle(color: Colors.white70),
+                Text(
+                  'We logged it for you. ${details.exceptionAsString().trim()}',
+                  style: const TextStyle(color: Colors.white70),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  details.stack?.toString().split('\n').take(3).join('\n') ?? '',
+                  style: const TextStyle(color: Colors.white38, fontSize: 12),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: ThemeColors.accent,
+                    backgroundColor: Colors.black,
+                    foregroundColor: Colors.white,
                   ),
                   onPressed: () {
                     _navigatorKey.currentState?.pushAndRemoveUntil(

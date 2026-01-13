@@ -2,27 +2,67 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../navigation/app_navigation_helpers.dart';
+import '../providers/auth_provider.dart';
 import '../providers/app_language_provider.dart';
+import '../screens/lessons_screen.dart';
 import '../screens/speak_screen.dart';
+import '../services/lesson_service.dart';
+import '../services/community_service.dart';
+import '../services/progress_service.dart';
 import '../services/tts_service.dart';
 import '../services/translation_manager.dart';
 import '../widgets/common_widgets.dart';
-import 'vocab_topic_screen.dart';
 import '../theme/theme_colors.dart';
 import '../data/content.dart';
-import '../data/vocab_data.dart';
 
-class HomeScreen extends StatelessWidget {
+const communityStatsData = [
+  {'value': '156', 'label': 'Active Today'},
+  {'value': '89', 'label': 'Posts This Week'},
+  {'value': '342', 'label': 'Members'},
+];
+
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
   static final TtsService _ttsService = TtsService();
+  Future<ProgressMetric>? _progressFuture;
+  String? _progressUserId;
+  late final Future<List<Lesson>> _lessonsFuture;
+  late Future<CommunityStats> _communityStatsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _lessonsFuture = LessonService.fetchLessons();
+    _communityStatsFuture = CommunityService.fetchStats();
+  }
+
+  void _updateProgressFuture(String? userId) {
+    if (userId == null) {
+      _progressFuture = null;
+      _progressUserId = null;
+      return;
+    }
+    if (_progressUserId != userId || _progressFuture == null) {
+      _progressFuture = ProgressService.fetchForProfile(userId);
+      _progressUserId = userId;
+    }
+  }
 
   Future<void> _speakText(BuildContext context, String text) async {
     if (text.isEmpty) return;
     final provider = context.read<AppLanguageProvider>();
     provider.translationStarted();
     try {
-      final translated =
-          await TranslationManager.instance.translate(text, provider.language);
+      final translated = await TranslationManager.instance.translate(
+        text,
+        provider.language,
+      );
       await _ttsService.speak(translated, provider.language.locale);
     } finally {
       provider.translationFinished();
@@ -31,6 +71,9 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    _updateProgressFuture(auth.userId);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -38,9 +81,9 @@ class HomeScreen extends StatelessWidget {
         children: [
           _buildHeroCard(context),
           const SizedBox(height: 20),
-          _buildDailyGoalCard(),
+          _buildDailyGoalCard(context, auth),
           const SizedBox(height: 20),
-          _buildStatChips(),
+          _buildStatChips(context, auth),
           const SizedBox(height: 30),
           _buildSectionTitle('Learn Phrases'),
           const SizedBox(height: 12),
@@ -48,13 +91,11 @@ class HomeScreen extends StatelessWidget {
           const SizedBox(height: 30),
           _buildSectionTitle('Quick Practice'),
           const SizedBox(height: 12),
-          ...quickPhrasesData.take(4).map(
-            (data) => _buildQuickPracticeCard(context, data),
-          ),
+          ...quickPhrasesData
+              .take(4)
+              .map((data) => _buildQuickPracticeCard(context, data)),
           const SizedBox(height: 30),
-          _buildSectionTitle('Wall of Wins', actionLabel: 'View All'),
-          const SizedBox(height: 12),
-          ...winStoriesData.map(_buildWinCard),
+          _buildLiveLessonsSection(context, auth),
           const SizedBox(height: 30),
           _buildSectionTitle('Our Community'),
           const SizedBox(height: 12),
@@ -110,9 +151,7 @@ class HomeScreen extends StatelessWidget {
                 child: GestureDetector(
                   onTap: () => Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (_) => const SpeakScreen(),
-                    ),
+                    MaterialPageRoute(builder: (_) => const SpeakScreen()),
                   ),
                   child: const HeroButton(
                     icon: Icons.mic,
@@ -143,7 +182,98 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDailyGoalCard() {
+  Widget _buildDailyGoalCard(BuildContext context, AuthProvider auth) {
+    if (!auth.isSignedIn) {
+      return _buildLockedPanel(
+        title: 'Daily goal',
+        description: 'Sign in to track progress, streaks, and badges.',
+        context: context,
+      );
+    }
+    final future = _progressFuture;
+    if (future == null) {
+      return _buildPlaceholderCard(
+        'Daily goal',
+        description: 'Loading progress data...',
+        child: const LinearProgressIndicator(),
+      );
+    }
+    return FutureBuilder<ProgressMetric>(
+      future: future,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return _buildPlaceholderCard(
+            'Daily goal',
+            child: const LinearProgressIndicator(),
+          );
+        }
+        if (snapshot.hasError) {
+          if (snapshot.error is UnauthorizedException) {
+            return _buildSessionExpiredCard(
+              context,
+              snapshot.error as UnauthorizedException,
+            );
+          }
+          return _buildPlaceholderCard(
+            'Daily goal',
+            description: 'Error loading progress: ${snapshot.error}',
+          );
+        }
+        final metric = snapshot.data;
+        if (metric == null) {
+          return _buildPlaceholderCard(
+            'Daily goal',
+            description: 'Unable to load progress.',
+          );
+        }
+        final progressText = metric.dailyGoalProgress.toString();
+        final targetText = metric.dailyGoalTarget > 0
+            ? metric.dailyGoalTarget.toString()
+            : '—';
+        return Container(
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
+          decoration: BoxDecoration(
+            color: const Color(0xFF0B3C47),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: Colors.white.withOpacity(0.05)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Daily goal',
+                style: TextStyle(fontSize: 16, color: Colors.white70),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                progressText,
+                style: const TextStyle(
+                  fontSize: 40,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Phrases completed',
+                style: const TextStyle(color: Colors.white70),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Target: $targetText',
+                style: const TextStyle(color: Colors.white54),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSessionExpiredCard(
+    BuildContext context,
+    UnauthorizedException error,
+  ) {
+    final auth = context.read<AuthProvider>();
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -154,43 +284,71 @@ class HomeScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: const [
-              Text(
-                'Daily Goal',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-              ),
-              Text('35/50 phrases', style: TextStyle(color: Colors.white70)),
-            ],
+          const Text(
+            'Daily goal',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 12),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: LinearProgressIndicator(
-              value: 0.7,
-              minHeight: 8,
-              color: ThemeColors.accentAlt,
-              backgroundColor: Colors.white.withOpacity(0.1),
+          const Text(
+            'Your session expired. Sign in again to refresh progress.',
+            style: TextStyle(color: Colors.white70),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            error.message,
+            style: const TextStyle(color: Colors.white54, fontSize: 12),
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton(
+            onPressed: () async {
+              await auth.signOut();
+              openAuthScreen(context);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: ThemeColors.accent,
+              foregroundColor: Colors.black,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
             ),
+            child: const Text('Sign in again'),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildStatChips() {
-    final stats = [
-      {'value': '127', 'label': 'Phrases'},
-      {'value': '18', 'label': 'Lessons'},
-      {'value': '7', 'label': 'Streak'},
-      {'value': '6', 'label': 'Badges'},
-    ];
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: stats
-          .map(
-            (entry) => Expanded(
+  Widget _buildStatChips(BuildContext context, AuthProvider auth) {
+    if (!auth.isSignedIn) {
+      return _buildLockedPanel(
+        title: 'Streaks & badges',
+        description: 'Sign in to unlock lifetime streaks, badges, and lessons.',
+        context: context,
+      );
+    }
+    final future = _progressFuture;
+    if (future == null) {
+      return const SizedBox();
+    }
+    return FutureBuilder<ProgressMetric>(
+      future: future,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return _buildPlaceholderChips();
+        }
+        final metric = snapshot.data;
+        if (metric == null) {
+          return _buildPlaceholderChips();
+        }
+        final stats = [
+          {'value': '${metric.streak}', 'label': 'Streak'},
+          {'value': '${metric.badges.length}', 'label': 'Badges'},
+          {'value': '${metric.lessonsCompleted}', 'label': 'Lessons'},
+        ];
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: stats.map((entry) {
+            return Expanded(
               child: Container(
                 margin: const EdgeInsets.symmetric(horizontal: 4),
                 padding: const EdgeInsets.symmetric(vertical: 16),
@@ -204,11 +362,11 @@ class HomeScreen extends StatelessWidget {
                     Text(
                       entry['value']!,
                       style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 8),
                     Text(
                       entry['label']!,
                       style: const TextStyle(color: Colors.white70),
@@ -216,208 +374,304 @@ class HomeScreen extends StatelessWidget {
                   ],
                 ),
               ),
-            ),
-          )
-          .toList(),
+            );
+          }).toList(),
+        );
+      },
     );
   }
 
-  Widget _buildSectionTitle(String title, {String? actionLabel}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-        ),
-        if (actionLabel != null)
-          Text(
-            actionLabel,
-            style: TextStyle(color: Colors.white.withOpacity(0.7)),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildPhraseCarousel() {
-    final featuredTopics = vocabTopics.take(6).toList();
-    return SizedBox(
-      height: 205,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: featuredTopics.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 4),
-        itemBuilder: (context, index) {
-          final topic = featuredTopics[index];
-          return InkWell(
-            borderRadius: BorderRadius.circular(20),
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => VocabTopicScreen(topic: topic)),
-            ),
-              child: Container(
-                width: 170,
-                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-              decoration: BoxDecoration(
-                color: const Color(0xFF041E25),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.white.withOpacity(0.06)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.white10,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(topic.icon, style: const TextStyle(fontSize: 20)),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    topic.title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    topic.description,
-                    style: const TextStyle(color: Colors.white70, fontSize: 12),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
+  Widget _buildLiveLessonsSection(BuildContext context, AuthProvider auth) {
+    if (!auth.isSignedIn) {
+      return _buildLockedPanel(
+        title: 'Live lessons',
+        description: 'Sign in to browse the latest lessons from Supabase.',
+        context: context,
+      );
+    }
+    return FutureBuilder<List<Lesson>>(
+      future: _lessonsFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final lessons = snapshot.data ?? [];
+        if (lessons.isEmpty) {
+          return const Text(
+            'Lessons are coming soon.',
+            style: TextStyle(color: Colors.white70),
           );
-        },
-      ),
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSectionTitle(
+              'Live Lessons',
+              actionLabel: 'View all',
+              onAction: () => Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const LessonsScreen())),
+            ),
+            const SizedBox(height: 12),
+            ...lessons
+                .take(3)
+                .map((lesson) => _buildLessonCard(context, lesson)),
+          ],
+        );
+      },
     );
   }
 
-  Widget _buildQuickPracticeCard(BuildContext context, Map<String, String> data) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(18),
-        onTap: () => _speakText(context, data['label']!),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: Colors.white.withOpacity(0.04)),
-            color: const Color(0xFF03212C),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    data['label']!,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    data['translation']!,
-                    style: const TextStyle(color: Colors.white70),
-                  ),
-                ],
-              ),
-              const Icon(Icons.volume_up, color: Colors.white38),
-            ],
-          ),
+  Widget _buildLessonCard(BuildContext context, Lesson lesson) {
+    final moduleNames = lesson.modules
+        .take(3)
+        .map((module) => module.title)
+        .join(' • ');
+    return GestureDetector(
+      onTap: () => Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (_) => const LessonsScreen())),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFF041E2A),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: Colors.white12),
         ),
-      ),
-    );
-  }
-
-  Widget _buildWinCard(Map<String, String> story) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF082732),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.emoji_events, color: ThemeColors.accent, size: 28),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              lesson.title,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 6),
+            Text(lesson.summary, style: const TextStyle(color: Colors.white70)),
+            const SizedBox(height: 10),
+            Row(
               children: [
+                const Icon(Icons.menu_book, color: Colors.white54, size: 18),
+                const SizedBox(width: 6),
                 Text(
-                  story['name']!,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  story['summary']!,
-                  style: const TextStyle(color: Colors.white70),
+                  '${lesson.modules.length} modules · $moduleNames',
+                  style: const TextStyle(color: Colors.white60, fontSize: 12),
                 ),
               ],
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLockedPanel({
+    required String title,
+    required String description,
+    required BuildContext context,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0B2C39),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
           ),
-          const SizedBox(width: 12),
-          Text(story['time']!, style: const TextStyle(color: Colors.white60)),
+          const SizedBox(height: 8),
+          Text(description, style: const TextStyle(color: Colors.white70)),
+          const SizedBox(height: 12),
+          ElevatedButton(
+            onPressed: () => openAuthScreen(context),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: ThemeColors.accent,
+              foregroundColor: Colors.black,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+            child: const Text('Sign in'),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildCommunityStats() {
-    final stats = [
-      {'value': '84+', 'label': 'Job Phrases'},
-      {'value': '16', 'label': 'Categories'},
-      {'value': '100%', 'label': 'Free'},
-    ];
+  Widget _buildPlaceholderCard(
+    String title, {
+    String? description,
+    Widget? child,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0B3C47),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          ),
+          if (description != null) ...[
+            const SizedBox(height: 8),
+            Text(description, style: const TextStyle(color: Colors.white70)),
+          ],
+          const SizedBox(height: 12),
+          if (child != null) child,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPlaceholderChips() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: stats
-          .map(
-            (entry) => Expanded(
+      children: List.generate(
+        3,
+        (_) => Expanded(
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            decoration: BoxDecoration(
+              color: const Color(0xFF07212B),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.white.withOpacity(0.05)),
+            ),
+            child: Column(
+              children: const [SizedBox(height: 14), SizedBox(height: 8)],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(
+    String title, {
+    String? actionLabel,
+    VoidCallback? onAction,
+  }) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+        ),
+        if (actionLabel != null)
+          TextButton(onPressed: onAction, child: Text(actionLabel)),
+      ],
+    );
+  }
+
+  Widget _buildPhraseCarousel() {
+    return SizedBox(
+      height: 140,
+      child: ListView.separated(
+        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        scrollDirection: Axis.horizontal,
+        itemCount: quickPhrasesData.length,
+        itemBuilder: (context, index) {
+          final data = quickPhrasesData[index];
+          return _buildQuickPracticeCard(context, data);
+        },
+      ),
+    );
+  }
+
+  Widget _buildQuickPracticeCard(
+    BuildContext context,
+    Map<String, Object> data,
+  ) {
+    final phrase = data['phrase'] as String? ?? data['label'] as String? ?? '';
+    final translation = data['translation'] as String? ?? '';
+    return GestureDetector(
+      onTap: () => _speakText(context, phrase),
+      child: Container(
+        width: 220,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFF041E2A),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.white12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              phrase,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 12),
+            Text(translation, style: const TextStyle(color: Colors.white70)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCommunityStats() {
+    return FutureBuilder<CommunityStats>(
+      future: _communityStatsFuture,
+      builder: (context, snapshot) {
+        final stats = snapshot.data;
+        final labels = ['Active Today', 'Posts This Week', 'Members'];
+        final values = [
+          snapshot.connectionState == ConnectionState.waiting
+              ? '--'
+              : '${stats?.activeToday ?? '--'}',
+          snapshot.connectionState == ConnectionState.waiting
+              ? '--'
+              : '${stats?.postsThisWeek ?? '--'}',
+          snapshot.connectionState == ConnectionState.waiting
+              ? '--'
+              : '${stats?.members ?? '--'}',
+        ];
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: List.generate(
+            labels.length,
+            (index) => Expanded(
               child: Container(
                 margin: const EdgeInsets.symmetric(horizontal: 4),
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF041B24),
-                  borderRadius: BorderRadius.circular(16),
+                  color: const Color(0xFF041521),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.white.withOpacity(0.05)),
                 ),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      entry['value']!,
+                      values[index],
                       style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 4),
                     Text(
-                      entry['label']!,
+                      labels[index],
                       style: const TextStyle(color: Colors.white70),
                     ),
                   ],
                 ),
               ),
             ),
-          )
-          .toList(),
+          ),
+        );
+      },
     );
   }
 
@@ -425,26 +679,21 @@ class HomeScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF0B403C),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        color: const Color(0xFF041C26),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: const [
           Text(
-            'Daily Tip',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+            'Daily tip',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
           ),
-          SizedBox(height: 10),
+          SizedBox(height: 8),
           Text(
-            'Practice with your horse! Try speaking English phrases while grooming. Your horse won\'t judge, and you\'ll build confidence!',
+            'Review your notes before bed—Short daily reviews protect your learning streak.',
             style: TextStyle(color: Colors.white70),
-          ),
-          SizedBox(height: 10),
-          Text(
-            '— Maira, English Coach',
-            style: TextStyle(color: Colors.white54),
           ),
         ],
       ),
