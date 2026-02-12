@@ -102,6 +102,7 @@ class _SpeakScreenBody extends StatelessWidget {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
+              foregroundColor: Colors.white,
             ),
             onPressed: () => provider.toggleRecording(context),
             icon: const Icon(Icons.mic, color: Colors.white),
@@ -231,6 +232,7 @@ class _SpeakScreenBody extends StatelessWidget {
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF0E5469),
+              foregroundColor: Colors.white,
             ),
             onPressed: provider.isTranslating
                 ? null
@@ -411,6 +413,7 @@ class _SpeakScreenBody extends StatelessWidget {
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF6C63FF),
+              foregroundColor: Colors.white,
             ),
             onPressed: provider.isPlaying ? null : provider.playTranslation,
             icon: const Icon(Icons.play_arrow),

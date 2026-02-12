@@ -95,4 +95,46 @@ class ProgressService {
       throw Exception('Failed to create progress metrics: $error');
     }
   }
+
+  static Future<ProgressMetric> trackDailyOpen(String profileId) async {
+    final nowUtc = DateTime.now().toUtc();
+    final today = DateTime.utc(nowUtc.year, nowUtc.month, nowUtc.day);
+    final todayDate = today.toIso8601String().split('T').first;
+    try {
+      final Map<String, dynamic> result = await _client
+          .rpc(
+            'track_daily_open',
+            params: {'p_profile_id': profileId, 'p_today': todayDate},
+          )
+          .select()
+          .single();
+      return ProgressMetric.fromJson(result);
+    } catch (error) {
+      if (error is PostgrestException && error.code == 'PGRST303') {
+        throw UnauthorizedException(error.message);
+      }
+      throw Exception('Failed to track daily open: $error');
+    }
+  }
+
+  static Future<ProgressMetric> incrementDailyGoal(
+    String profileId, {
+    int amount = 1,
+  }) async {
+    try {
+      final Map<String, dynamic> result = await _client
+          .rpc(
+            'increment_daily_goal',
+            params: {'p_profile_id': profileId, 'p_amount': amount},
+          )
+          .select()
+          .single();
+      return ProgressMetric.fromJson(result);
+    } catch (error) {
+      if (error is PostgrestException && error.code == 'PGRST303') {
+        throw UnauthorizedException(error.message);
+      }
+      throw Exception('Failed to increment daily goal: $error');
+    }
+  }
 }

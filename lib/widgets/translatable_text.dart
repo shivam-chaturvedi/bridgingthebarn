@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/app_language_provider.dart';
+import '../providers/app_settings_provider.dart';
 import '../services/translation_manager.dart';
 import '../utils/language_utils.dart';
 
@@ -33,13 +34,16 @@ class _TranslatableTextState extends State<TranslatableText> {
   late LanguageDefinition _language;
   late Future<String> _translationFuture;
   late AppLanguageProvider _languageProvider;
+  late AppSettingsProvider _settingsProvider;
   String? _lastText;
   bool _isLanguageInitialized = false;
+  bool _translateUiCopyEnabled = true;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _languageProvider = Provider.of<AppLanguageProvider>(context);
+    _settingsProvider = Provider.of<AppSettingsProvider>(context);
     _updateTranslation(force: true);
   }
 
@@ -53,20 +57,25 @@ class _TranslatableTextState extends State<TranslatableText> {
 
   void _updateTranslation({bool force = false}) {
     final newLanguage = _languageProvider.language;
-    final languageChanged = !_isLanguageInitialized || newLanguage.code != _language.code;
+    final shouldTranslate = _settingsProvider.translateUiCopy;
+    final languageChanged =
+        !_isLanguageInitialized || newLanguage.code != _language.code;
     final textChanged = _lastText != widget.text;
-    if (!languageChanged && !textChanged && !force) {
+    final settingsChanged = shouldTranslate != _translateUiCopyEnabled;
+    if (!languageChanged && !textChanged && !settingsChanged && !force) {
       return;
     }
 
+    _translateUiCopyEnabled = shouldTranslate;
     _language = newLanguage;
     _isLanguageInitialized = true;
     _lastText = widget.text;
-    if (_language.code == 'en') {
+    if (!shouldTranslate || newLanguage.code == 'en') {
       _translationFuture = Future.value(widget.text);
       setState(() {});
       return;
     }
+
     final cached = TranslationManager.instance.cached(widget.text, _language);
     if (cached != null) {
       _translationFuture = Future.value(cached);
@@ -87,7 +96,9 @@ class _TranslatableTextState extends State<TranslatableText> {
       future: _translationFuture,
       builder: (_, snapshot) {
         final isDone = snapshot.connectionState == ConnectionState.done;
-        final display = isDone && snapshot.hasData ? snapshot.data! : widget.text;
+        final display = isDone && snapshot.hasData
+            ? snapshot.data!
+            : widget.text;
         final subduedStyle = !isDone && baseStyle.color != null
             ? baseStyle.copyWith(color: baseStyle.color!.withOpacity(0.65))
             : baseStyle;

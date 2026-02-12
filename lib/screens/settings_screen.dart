@@ -3,6 +3,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/app_language_provider.dart';
+import '../providers/app_settings_provider.dart';
 import '../theme/theme_colors.dart';
 import '../utils/language_utils.dart';
 
@@ -14,10 +15,6 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  bool _autoTranslateUI = true;
-  bool _autoPlayAudio = true;
-  bool _highlightPhrases = true;
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -27,8 +24,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         elevation: 0,
         title: const Text('Settings'),
       ),
-      body: Consumer<AppLanguageProvider>(
-        builder: (context, languageProvider, _) {
+      body: Consumer2<AppLanguageProvider, AppSettingsProvider>(
+        builder: (context, languageProvider, settingsProvider, _) {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
@@ -45,24 +42,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               const SizedBox(height: 8),
               SwitchListTile(
-                value: _autoTranslateUI,
-                onChanged: (value) => setState(() => _autoTranslateUI = value),
+                value: settingsProvider.translateUiCopy,
+                onChanged: settingsProvider.setTranslateUiCopy,
+                activeColor: Colors.green,
                 title: const Text('Translate UI copy'),
-                subtitle: const Text('Render text and labels in the selected language'),
+                subtitle: const Text(
+                  'Render text and labels in the selected language',
+                ),
                 secondary: const Icon(Icons.translate),
                 dense: true,
               ),
               SwitchListTile(
-                value: _autoPlayAudio,
-                onChanged: (value) => setState(() => _autoPlayAudio = value),
+                value: settingsProvider.autoPlayAudio,
+                onChanged: settingsProvider.setAutoPlayAudio,
+                activeColor: Colors.green,
                 title: const Text('Auto play audio'),
                 subtitle: const Text('Play phrases automatically when tapped'),
                 secondary: const Icon(Icons.volume_up),
                 dense: true,
               ),
               SwitchListTile(
-                value: _highlightPhrases,
-                onChanged: (value) => setState(() => _highlightPhrases = value),
+                value: settingsProvider.highlightKeyPhrases,
+                onChanged: settingsProvider.setHighlightKeyPhrases,
+                activeColor: Colors.green,
                 title: const Text('Highlight key phrases'),
                 subtitle: const Text('Emphasize new vocabulary across the app'),
                 secondary: const Icon(Icons.highlight),
@@ -78,11 +80,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 contentPadding: const EdgeInsets.symmetric(horizontal: 0),
                 leading: const Icon(Icons.shield),
                 title: const Text('Manage app permissions'),
-                subtitle: const Text('Ensure microphone, storage, and audio can run'),
+                subtitle: const Text(
+                  'Ensure microphone, storage, and audio can run',
+                ),
                 trailing: TextButton(
                   onPressed: openAppSettings,
                   child: const Text('Open'),
                 ),
+                onTap: openAppSettings,
               ),
               ListTile(
                 contentPadding: const EdgeInsets.symmetric(horizontal: 0),
@@ -92,11 +97,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 trailing: TextButton(
                   onPressed: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Email support@bridgingbarn.com')),
+                      const SnackBar(
+                        content: Text('Email support@bridgingbarn.com'),
+                      ),
                     );
                   },
                   child: const Text('Email'),
                 ),
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Email support@bridgingbarn.com'),
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: 20),
               TextButton(

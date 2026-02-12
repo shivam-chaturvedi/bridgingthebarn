@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 
+import '../navigation/app_navigation_helpers.dart';
 import '../providers/auth_provider.dart';
 import '../services/account_service.dart';
+import '../services/supabase_service.dart';
 import '../theme/theme_colors.dart';
 import '../widgets/auth_required_placeholder.dart';
-import '../navigation/app_navigation_helpers.dart';
 import '../screens/auth_screen.dart';
 
 class AccountScreen extends StatefulWidget {
@@ -20,6 +22,7 @@ class _AccountScreenState extends State<AccountScreen> {
   final _passwordFormKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
+  final _currentPasswordController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   var _hasInitialized = false;
@@ -44,6 +47,7 @@ class _AccountScreenState extends State<AccountScreen> {
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
+    _currentPasswordController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
@@ -81,8 +85,10 @@ class _AccountScreenState extends State<AccountScreen> {
 
   Future<void> _updatePassword() async {
     if (!_passwordFormKey.currentState!.validate()) return;
+    final currentPassword = _currentPasswordController.text.trim();
     final password = _passwordController.text.trim();
     final confirm = _confirmPasswordController.text.trim();
+    
     if (password != confirm) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Passwords do not match')),
@@ -92,7 +98,26 @@ class _AccountScreenState extends State<AccountScreen> {
 
     setState(() => _isUpdatingPassword = true);
     try {
+      // Verify current password by attempting to sign in
+      final auth = context.read<AuthProvider>();
+      final email = auth.email;
+      try {
+        await SupabaseService.client.auth.signInWithPassword(
+          email: email,
+          password: currentPassword,
+        );
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Current password is incorrect')),
+          );
+        }
+        return;
+      }
+      
+      // Update password
       await AccountService.updateAccount(password: password);
+      _currentPasswordController.clear();
       _passwordController.clear();
       _confirmPasswordController.clear();
       if (mounted) {
@@ -249,7 +274,7 @@ class _AccountScreenState extends State<AccountScreen> {
                     backgroundColor: ThemeColors.accent,
                     child: Text(
                       auth.displayName.isNotEmpty ? auth.displayName[0] : 'B',
-                      style: const TextStyle(fontSize: 24, color: Colors.black),
+                      style: const TextStyle(fontSize: 24, color: Colors.white),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -321,7 +346,7 @@ class _AccountScreenState extends State<AccountScreen> {
                       onPressed: _isSavingProfile ? null : _saveProfile,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: ThemeColors.accent,
-                        foregroundColor: Colors.black,
+                        foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -331,7 +356,7 @@ class _AccountScreenState extends State<AccountScreen> {
                           ? const SizedBox(
                               height: 18,
                               width: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2.2, color: Colors.black),
+                              child: CircularProgressIndicator(strokeWidth: 2.2, color: Colors.white),
                             )
                           : const Text('Save changes'),
                     ),
@@ -346,6 +371,23 @@ class _AccountScreenState extends State<AccountScreen> {
               key: _passwordFormKey,
               child: Column(
                 children: [
+                  TextFormField(
+                    controller: _currentPasswordController,
+                    style: const TextStyle(color: Colors.white),
+                    obscureText: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Current password',
+                      labelStyle: TextStyle(color: Colors.white60),
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Enter your current password';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
                   TextFormField(
                     controller: _passwordController,
                     style: const TextStyle(color: Colors.white),
@@ -386,6 +428,7 @@ class _AccountScreenState extends State<AccountScreen> {
                       onPressed: _isUpdatingPassword ? null : _updatePassword,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF0E5469),
+                        foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),

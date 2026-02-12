@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'navigation/main_navigation.dart';
 import 'providers/app_language_provider.dart';
+import 'providers/app_settings_provider.dart';
 import 'providers/auth_provider.dart';
 import 'services/supabase_service.dart';
 import 'theme/theme_colors.dart';
@@ -14,29 +15,29 @@ import 'theme/theme_colors.dart';
 final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Supabase.initialize(
-    url: SupabaseService.supabaseUrl,
-    anonKey: SupabaseService.supabaseAnonKey,
-  );
-  FlutterError.onError = (details) {
-    if (kReleaseMode) {
-      Zone.current.handleUncaughtError(
-        details.exception,
-        details.stack ?? StackTrace.current,
-      );
-    } else {
-      FlutterError.presentError(details);
-    }
-  };
-  ErrorWidget.builder = (details) => AppErrorWidget(details: details);
+  runZonedGuarded(() async {
+    WidgetsFlutterBinding.ensureInitialized();
+    await Supabase.initialize(
+      url: SupabaseService.supabaseUrl,
+      anonKey: SupabaseService.supabaseAnonKey,
+    );
+    
+    FlutterError.onError = (details) {
+      if (kReleaseMode) {
+        Zone.current.handleUncaughtError(
+          details.exception,
+          details.stack ?? StackTrace.current,
+        );
+      } else {
+        FlutterError.presentError(details);
+      }
+    };
+    ErrorWidget.builder = (details) => AppErrorWidget(details: details);
 
-  runZonedGuarded(
-    () => runApp(const BridgingBarnApp()),
-    (error, stack) {
-      debugPrint('Uncaught app error: $error\n$stack');
-    },
-  );
+    runApp(const BridgingBarnApp());
+  }, (error, stack) {
+    debugPrint('Uncaught app error: $error\n$stack');
+  });
 }
 
 class BridgingBarnApp extends StatelessWidget {
@@ -47,6 +48,7 @@ class BridgingBarnApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AppLanguageProvider()),
+        ChangeNotifierProvider(create: (_) => AppSettingsProvider()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
       ],
       child: MaterialApp(
@@ -54,14 +56,26 @@ class BridgingBarnApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         title: 'Bridging the Barn',
         theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: ThemeColors.accent,
-            brightness: Brightness.dark,
-          ),
+          colorScheme:
+              ColorScheme.fromSeed(
+                seedColor: ThemeColors.primary,
+                brightness: Brightness.dark,
+              ).copyWith(
+                primary: ThemeColors.primary,
+                secondary: ThemeColors.primary,
+                surface: ThemeColors.primary,
+                background: ThemeColors.primary,
+                tertiary: ThemeColors.primary,
+              ),
+          primaryColor: ThemeColors.primary,
           scaffoldBackgroundColor: ThemeColors.primary,
+          canvasColor: ThemeColors.primary,
+          cardColor: ThemeColors.primary,
+          dialogBackgroundColor: ThemeColors.primary,
           fontFamily: 'SFProDisplay',
         ),
-        builder: (context, child) => SafeArea(child: child ?? const SizedBox.shrink()),
+        builder: (context, child) =>
+            SafeArea(child: child ?? const SizedBox.shrink()),
         home: const MainNavigation(),
       ),
     );
@@ -107,7 +121,8 @@ class AppErrorWidget extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  details.stack?.toString().split('\n').take(3).join('\n') ?? '',
+                  details.stack?.toString().split('\n').take(3).join('\n') ??
+                      '',
                   style: const TextStyle(color: Colors.white38, fontSize: 12),
                   textAlign: TextAlign.center,
                 ),

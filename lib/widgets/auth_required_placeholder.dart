@@ -54,7 +54,7 @@ class AuthRequiredPlaceholder extends StatelessWidget {
                     onPressed: onSignIn,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: ThemeColors.accent,
-                      foregroundColor: Colors.black,
+                      foregroundColor: Colors.white,
                     ),
                     child: const Text('Sign in'),
                   ),
@@ -65,6 +65,7 @@ class AuthRequiredPlaceholder extends StatelessWidget {
                     onPressed: onSignUp,
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: Colors.white38),
+                      foregroundColor: Colors.white,
                     ),
                     child: const Text('Create account'),
                   ),

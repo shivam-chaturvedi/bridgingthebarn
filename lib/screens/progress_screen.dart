@@ -24,7 +24,6 @@ class ProgressScreen extends StatefulWidget {
 }
 
 class _ProgressScreenState extends State<ProgressScreen> {
-  int _selectedTab = 0;
   Future<ProgressMetric>? _metricFuture;
 
   @override
@@ -56,18 +55,13 @@ class _ProgressScreenState extends State<ProgressScreen> {
                           children: [
                             _buildHeader(metric, loading),
                             const SizedBox(height: 20),
-                            if (_selectedTab == 1) ...[
-                              _buildBadgeList(metric),
-                              const SizedBox(height: 20),
-                            ] else ...[
-                              _buildStatsGrid(metric),
-                              const SizedBox(height: 20),
-                              _buildDailyGoalCard(metric),
-                              const SizedBox(height: 20),
-                              _buildLessonSummary(metric),
-                              const SizedBox(height: 20),
-                              _buildKeepGoing(context, metric),
-                            ],
+                            _buildStatsGrid(metric),
+                            const SizedBox(height: 20),
+                            _buildDailyGoalCard(metric),
+                            const SizedBox(height: 20),
+                            _buildLessonSummary(metric),
+                            const SizedBox(height: 20),
+                            _buildKeepGoing(context, metric),
                             const SizedBox(height: 40),
                           ],
                         ),
@@ -194,59 +188,23 @@ class _ProgressScreenState extends State<ProgressScreen> {
           Text(
             loading
                 ? 'Loading your latest streak…'
-                : 'Streak: ${metric?.streak ?? 0} days · Badges: ${metric?.badges.length ?? 0}',
+                : 'Streak: ${metric?.streak ?? 0} days · Today: ${metric?.dailyGoalProgress ?? 0}/${metric?.dailyGoalTarget ?? 50}',
             style: const TextStyle(color: Colors.white70, fontSize: 16),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(child: _buildTab('Overview', LucideIcons.activity, 0)),
-              const SizedBox(width: 8),
-              Expanded(child: _buildTab('Badges', LucideIcons.award, 1)),
-            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildTab(String label, IconData icon, int index) {
-    final active = _selectedTab == index;
-    return InkWell(
-      onTap: () => setState(() => _selectedTab = index),
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: active ? const Color(0xFF0E6A86) : const Color(0xFF041927),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: active ? Colors.white : Colors.transparent),
-        ),
-        child: Center(
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, color: Colors.white, size: 16),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildStatsGrid(ProgressMetric? metric) {
     final stats = [
-      {'label': 'Day Streak', 'value': '${metric?.streak ?? 0}'},
-      {'label': 'Badges', 'value': '${metric?.badges.length ?? 0}'},
-      {'label': 'Lessons Done', 'value': '${metric?.lessonsCompleted ?? 0}'},
+      {'label': 'Streak', 'value': '${metric?.streak ?? 0} days'},
+      {
+        'label': 'Daily Goal',
+        'value':
+            '${metric?.dailyGoalProgress ?? 0}/${metric?.dailyGoalTarget ?? 50}',
+      },
+      {'label': 'Lessons', 'value': '${metric?.lessonsCompleted ?? 0}'},
     ];
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -368,44 +326,6 @@ class _ProgressScreenState extends State<ProgressScreen> {
     );
   }
 
-  Widget _buildBadgeList(ProgressMetric? metric) {
-    final badges = metric?.badges ?? [];
-    if (badges.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            color: const Color(0xFF041C26),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: Colors.white.withOpacity(0.05)),
-          ),
-          child: const Text(
-            'Badges will appear here once you complete lessons and reach milestones.',
-            style: TextStyle(color: Colors.white70),
-          ),
-        ),
-      );
-    }
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: badges
-            .map(
-              (badge) => Chip(
-                label: Text(badge),
-                backgroundColor: const Color(0xFF0E5469),
-                labelStyle: const TextStyle(color: Colors.white),
-              ),
-            )
-            .toList(),
-      ),
-    );
-  }
-
   Widget _buildKeepGoing(BuildContext context, ProgressMetric? metric) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -433,6 +353,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF0E5469),
+              foregroundColor: Colors.white,
               minimumSize: const Size.fromHeight(48),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),

@@ -270,6 +270,9 @@ class _AuthScreenState extends State<AuthScreen> {
                             alignment: Alignment.centerRight,
                             child: TextButton(
                               onPressed: _showForgotPasswordDialog,
+                              style: TextButton.styleFrom(
+                                foregroundColor: Colors.white,
+                              ),
                               child: const Text('Forgot password?'),
                             ),
                           ),
@@ -280,7 +283,7 @@ class _AuthScreenState extends State<AuthScreen> {
                             onPressed: isProcessing ? null : _submit,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: ThemeColors.accent,
-                              foregroundColor: Colors.black87,
+                              foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
@@ -316,6 +319,9 @@ class _AuthScreenState extends State<AuthScreen> {
                 TextButton(
                   onPressed: () => _switchTab(
                     _tab == AuthTab.signIn ? AuthTab.signUp : AuthTab.signIn,
+                  ),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.white,
                   ),
                   child: Text(_tab == AuthTab.signIn ? 'Create account' : 'Sign in'),
                 ),

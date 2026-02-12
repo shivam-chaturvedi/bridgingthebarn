@@ -151,6 +151,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF0E5469),
+                            foregroundColor: Colors.white,
                           ),
                           onPressed: _commentController.text.trim().isEmpty
                               ? null
@@ -396,6 +397,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                           ElevatedButton(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF0E5469),
+                              foregroundColor: Colors.white,
                             ),
                             onPressed: _isPosting ? null : _submitPost,
                             child: _isPosting

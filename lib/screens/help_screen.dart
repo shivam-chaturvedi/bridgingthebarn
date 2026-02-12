@@ -39,16 +39,9 @@ class HelpScreen extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             _buildSupportCard(
-              icon: LucideIcons.messageSquare,
-              label: 'Live chat',
-              detail: 'Tap to start a conversation with our coaches',
-              accent: ThemeColors.accentAlt,
-            ),
-            const SizedBox(height: 12),
-            _buildSupportCard(
               icon: LucideIcons.mail,
               label: 'Email support',
-              detail: 'support@bridgingbarn.com • response in < 24 hrs',
+              detail: 'support@bridgingbarn.com',
               accent: ThemeColors.accent,
             ),
             const SizedBox(height: 12),

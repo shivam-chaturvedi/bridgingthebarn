@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../navigation/app_navigation_helpers.dart';
 import '../providers/auth_provider.dart';
 import '../providers/app_language_provider.dart';
+import '../screens/lesson_detail_screen.dart';
 import '../screens/lessons_screen.dart';
 import '../screens/speak_screen.dart';
 import '../services/lesson_service.dart';
@@ -11,9 +12,11 @@ import '../services/community_service.dart';
 import '../services/progress_service.dart';
 import '../services/tts_service.dart';
 import '../services/translation_manager.dart';
-import '../widgets/common_widgets.dart';
 import '../theme/theme_colors.dart';
 import '../data/content.dart';
+import '../data/vocab_data.dart';
+import '../screens/vocab_topic_screen.dart';
+import '../widgets/common_widgets.dart';
 
 const communityStatsData = [
   {'value': '156', 'label': 'Active Today'},
@@ -49,7 +52,7 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
     if (_progressUserId != userId || _progressFuture == null) {
-      _progressFuture = ProgressService.fetchForProfile(userId);
+      _progressFuture = ProgressService.trackDailyOpen(userId);
       _progressUserId = userId;
     }
   }
@@ -87,13 +90,15 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 30),
           _buildSectionTitle('Learn Phrases'),
           const SizedBox(height: 12),
-          _buildPhraseCarousel(),
+          _buildVocabCategoryList(context),
           const SizedBox(height: 30),
           _buildSectionTitle('Quick Practice'),
           const SizedBox(height: 12),
           ...quickPhrasesData
               .take(4)
-              .map((data) => _buildQuickPracticeCard(context, data)),
+              .map(
+                (data) => _buildQuickPracticeCard(context, data, expand: true),
+              ),
           const SizedBox(height: 30),
           _buildLiveLessonsSection(context, auth),
           const SizedBox(height: 30),
@@ -136,14 +141,6 @@ class _HomeScreenState extends State<HomeScreen> {
             'Transforming lives through language & community',
             style: TextStyle(color: Colors.white70),
           ),
-          const SizedBox(height: 16),
-          Row(
-            children: const [
-              StatChip(icon: Icons.local_fire_department, label: '7 days'),
-              SizedBox(width: 12),
-              StatChip(icon: Icons.star, label: '520 coins'),
-            ],
-          ),
           const SizedBox(height: 18),
           Row(
             children: [
@@ -171,7 +168,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     subLabel: 'Next: Horse Care',
                     backgroundColor: Color(0xFFFACC47),
                     iconColor: Colors.black,
-                    textColor: Colors.black,
+                    textColor: Colors.white,
                   ),
                 ),
               ),
@@ -306,7 +303,7 @@ class _HomeScreenState extends State<HomeScreen> {
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: ThemeColors.accent,
-              foregroundColor: Colors.black,
+              foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
               ),
@@ -422,15 +419,23 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  String _topicName(String title) {
+    final parts = title.split(' - ');
+    return parts.length > 1 ? parts.last.trim() : title;
+  }
+
   Widget _buildLessonCard(BuildContext context, Lesson lesson) {
     final moduleNames = lesson.modules
-        .take(3)
-        .map((module) => module.title)
+        .take(2)
+        .map((module) => _topicName(module.title))
         .join(' • ');
     return GestureDetector(
-      onTap: () => Navigator.of(
+      onTap: () => Navigator.push(
         context,
-      ).push(MaterialPageRoute(builder: (_) => const LessonsScreen())),
+        MaterialPageRoute(
+          builder: (_) => LessonDetailScreen(lesson: lesson),
+        ),
+      ),
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
@@ -453,9 +458,13 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 const Icon(Icons.menu_book, color: Colors.white54, size: 18),
                 const SizedBox(width: 6),
-                Text(
-                  '${lesson.modules.length} modules · $moduleNames',
-                  style: const TextStyle(color: Colors.white60, fontSize: 12),
+                Expanded(
+                  child: Text(
+                    '${lesson.modules.length} modules · $moduleNames',
+                    style: const TextStyle(color: Colors.white60, fontSize: 12),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
             ),
@@ -491,7 +500,7 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () => openAuthScreen(context),
             style: ElevatedButton.styleFrom(
               backgroundColor: ThemeColors.accent,
-              foregroundColor: Colors.black,
+              foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
               ),
@@ -574,16 +583,18 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildPhraseCarousel() {
+  Widget _buildVocabCategoryList(BuildContext context) {
     return SizedBox(
-      height: 140,
+      height: 150,
       child: ListView.separated(
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
         scrollDirection: Axis.horizontal,
-        itemCount: quickPhrasesData.length,
+        padding: const EdgeInsets.only(right: 4),
+        physics: const BouncingScrollPhysics(),
+        itemCount: vocabTopics.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 12),
         itemBuilder: (context, index) {
-          final data = quickPhrasesData[index];
-          return _buildQuickPracticeCard(context, data);
+          final topic = vocabTopics[index];
+          return SizedBox(width: 280, child: _VocabCategoryCard(topic: topic));
         },
       ),
     );
@@ -591,14 +602,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildQuickPracticeCard(
     BuildContext context,
-    Map<String, Object> data,
-  ) {
+    Map<String, Object> data, {
+    bool expand = false,
+  }) {
     final phrase = data['phrase'] as String? ?? data['label'] as String? ?? '';
     final translation = data['translation'] as String? ?? '';
     return GestureDetector(
       onTap: () => _speakText(context, phrase),
       child: Container(
-        width: 220,
+        width: expand ? double.infinity : 220,
+        margin: expand ? const EdgeInsets.only(bottom: 12) : EdgeInsets.zero,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: const Color(0xFF041E2A),
@@ -696,6 +709,66 @@ class _HomeScreenState extends State<HomeScreen> {
             style: TextStyle(color: Colors.white70),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _VocabCategoryCard extends StatelessWidget {
+  const _VocabCategoryCard({required this.topic});
+
+  final VocabTopic topic;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => VocabTopicScreen(topic: topic)),
+      ),
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 18),
+        decoration: BoxDecoration(
+          color: const Color(0xFF041D25),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: Colors.white.withOpacity(0.05)),
+        ),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 24,
+              backgroundColor: const Color(0xFF0E5469),
+              child: Text(topic.icon, style: const TextStyle(fontSize: 20)),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    topic.title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    topic.description,
+                    style: const TextStyle(color: Colors.white60),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.arrow_forward_ios,
+              color: Colors.white70,
+              size: 18,
+            ),
+          ],
+        ),
       ),
     );
   }
