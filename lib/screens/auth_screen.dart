@@ -10,6 +10,9 @@ import '../theme/theme_colors.dart';
 
 enum AuthTab { signIn, signUp }
 
+const _privacyPolicyUrl =
+    'https://www.termsfeed.com/live/7fe2b83d-6004-4259-956f-abdaacde5373';
+
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key, this.initialTab = AuthTab.signIn});
 
@@ -152,6 +155,17 @@ class _AuthScreenState extends State<AuthScreen> {
 
   void _openPolicy(Widget screen) {
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => screen));
+  }
+
+  Future<void> _launchPrivacyPolicy() async {
+    final uri = Uri.parse(_privacyPolicyUrl);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open privacy policy.')),
+        );
+      }
+    }
   }
 
   Widget _buildTabButton(String label, AuthTab tab) {
@@ -339,19 +353,20 @@ class _AuthScreenState extends State<AuthScreen> {
               alignment: WrapAlignment.center,
               spacing: 12,
               children: [
-                TextButton(
-                  onPressed: () async {
-                    final url = Uri.parse(
-                        'https://www.termsfeed.com/live/7fe2b83d-6004-4259-956f-abdaacde5373');
-                    await launchUrl(
-                      url,
-                      mode: LaunchMode.externalApplication,
-                    );
-                  },
+                OutlinedButton(
+                  onPressed: _launchPrivacyPolicy,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    side: const BorderSide(color: Colors.white54),
+                  ),
                   child: const Text('Privacy Policy'),
                 ),
-                TextButton(
+                OutlinedButton(
                   onPressed: () => _openPolicy(const TermsScreen()),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    side: const BorderSide(color: Colors.white54),
+                  ),
                   child: const Text('Terms of Service'),
                 ),
               ],

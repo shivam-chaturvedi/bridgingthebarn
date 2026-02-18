@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:gotrue/gotrue.dart';
 
 import 'profile_service.dart';
@@ -33,17 +35,31 @@ class AccountService {
 
   /// Removes the signed-in profile row and signs the user out.
   static Future<void> deleteAccount() async {
-    final currentUser = _client.auth.currentUser;
-    if (currentUser == null) {
+    final currentSession = _client.auth.currentSession;
+    final userEmail = _client.auth.currentUser?.email;
+
+    if (currentSession == null || userEmail == null) {
       throw const AuthException('No signed-in account found.');
     }
 
     try {
-      await _client.functions.invoke('delete-user-account');
+      final response = await _client.functions.invoke(
+        'delete-user-account',
+        headers: {
+          'Authorization': 'Bearer ${currentSession.accessToken}',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'email': userEmail}),
+      );
+
+      if (response.status != 200) {
+        throw Exception(response.data.toString());
+      }
     } catch (error) {
       throw Exception('Could not delete account: $error');
     }
 
     await _client.auth.signOut();
   }
+
 }
