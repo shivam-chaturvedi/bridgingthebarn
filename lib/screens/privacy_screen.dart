@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../navigation/app_navigation_helpers.dart';
@@ -67,7 +68,7 @@ class PrivacyScreen extends StatelessWidget {
               children: [
                 'Download or delete your profile anytime from Settings.',
                 'Opt out of push/sms notifications always available in Settings.',
-                'Contact support@bridgingbarn.com for any privacy requests.',
+                'Contact mairadahiya@gmail.com for any privacy requests.',
               ],
             ),
             const SizedBox(height: 20),
@@ -79,6 +80,29 @@ class PrivacyScreen extends StatelessWidget {
             const Text(
               'Your data is encrypted on device, backups are stored with industry standard protections, and shared content is anonymized by default.',
               style: TextStyle(color: Colors.white70),
+            ),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () async {
+                  final url = Uri.parse(
+                      'https://www.termsfeed.com/live/7fe2b83d-6004-4259-956f-abdaacde5373');
+                  await launchUrl(
+                    url,
+                    mode: LaunchMode.externalApplication,
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF0E5469),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                child: const Text('View Full Privacy Policy'),
+              ),
             ),
           ],
         ),

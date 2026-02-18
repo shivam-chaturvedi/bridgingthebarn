@@ -4,7 +4,7 @@ class HeroButton extends StatelessWidget {
   const HeroButton({
     required this.icon,
     required this.label,
-    required this.subLabel,
+    this.subLabel,
     required this.backgroundColor,
     this.iconColor = Colors.white,
     this.textColor = Colors.white,
@@ -13,7 +13,7 @@ class HeroButton extends StatelessWidget {
 
   final IconData icon;
   final String label;
-  final String subLabel;
+  final String? subLabel;
   final Color backgroundColor;
   final Color iconColor;
   final Color textColor;
@@ -40,11 +40,14 @@ class HeroButton extends StatelessWidget {
               color: textColor,
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            subLabel,
-            style: TextStyle(color: textColor.withOpacity(0.75), fontSize: 12),
-          ),
+          if (subLabel != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              subLabel!,
+              style:
+                  TextStyle(color: textColor.withOpacity(0.75), fontSize: 12),
+            ),
+          ],
         ],
       ),
     );

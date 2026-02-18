@@ -410,12 +410,22 @@ class _LessonsScreenState extends State<LessonsScreen> {
         debugPrint('Failed to increment daily goal: $error');
       });
     }
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) =>
-            LessonDetailScreen(lesson: lesson, module: module),
-      ),
-    );
+    Navigator.of(context)
+        .push(
+          MaterialPageRoute(
+            builder: (context) =>
+                LessonDetailScreen(lesson: lesson, module: module),
+          ),
+        )
+        .then((_) {
+      // Refresh the lesson list so completed state is reflected immediately
+      if (mounted && userId != null) {
+        setState(() {
+          _payloadUserId = null; // force reload
+          _payload = _loadPayload(userId);
+        });
+      }
+    });
   }
 
   IconData _lessonIcon(String title) {

@@ -98,7 +98,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   onPressed: () {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('Email support@bridgingbarn.com'),
+                        content: Text('Email mairadahiya@gmail.com'),
                       ),
                     );
                   },
@@ -107,7 +107,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onTap: () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Email support@bridgingbarn.com'),
+                      content: Text('Email mairadahiya@gmail.com'),
                     ),
                   );
                 },

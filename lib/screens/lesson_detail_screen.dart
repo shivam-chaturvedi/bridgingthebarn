@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../providers/auth_provider.dart';
 import '../services/lesson_detail_service.dart';
+import '../services/lesson_progress_service.dart';
 import '../services/lesson_service.dart';
-import '../services/permission_service.dart';
-import '../screens/practice_activity_screen.dart';
-import '../theme/theme_colors.dart';
+import '../screens/lesson_quiz_screen.dart';
 
 String _defaultDurationForModule(String title) {
   if (title.toLowerCase().contains('basic')) return '10 min';
@@ -30,16 +31,51 @@ class LessonDetailScreen extends StatefulWidget {
 class _LessonDetailScreenState extends State<LessonDetailScreen> {
   late final Future<LessonDetailData> _detailFuture;
   late final LessonModule _selectedModule;
-  LessonDetailData? _currentDetail;
+  bool _isCompleted = false;
 
   @override
   void initState() {
     super.initState();
-    // Use provided module or first module from lesson
-    _selectedModule = widget.module ?? 
-        (widget.lesson.modules.isNotEmpty ? widget.lesson.modules.first : 
-         LessonModule(id: '', lessonId: widget.lesson.id, title: 'Module', content: '', position: 0));
+    _selectedModule = widget.module ??
+        (widget.lesson.modules.isNotEmpty
+            ? widget.lesson.modules.first
+            : LessonModule(
+                id: '',
+                lessonId: widget.lesson.id,
+                title: 'Module',
+                content: '',
+                position: 0,
+              ));
     _detailFuture = LessonDetailService.fetchLessonDetail(widget.lesson.id);
+    _loadCompletionState();
+  }
+
+  Future<void> _loadCompletionState() async {
+    final userId = context.read<AuthProvider>().userId;
+    if (userId == null || _selectedModule.id.isEmpty) return;
+    final completedIds =
+        await LessonProgressService.fetchCompletedModuleIds(userId);
+    if (mounted) {
+      setState(() {
+        _isCompleted = completedIds.contains(_selectedModule.id);
+      });
+    }
+  }
+
+  Future<void> _openQuiz() async {
+    final result = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => LessonQuizScreen(
+          lessonId: widget.lesson.id,
+          lessonTitle: _selectedModule.title,
+          moduleId: _selectedModule.id,
+        ),
+      ),
+    );
+    // result == true means the user passed the quiz
+    if (result == true && mounted) {
+      setState(() => _isCompleted = true);
+    }
   }
 
   @override
@@ -64,16 +100,11 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
               );
             }
             final detail = snapshot.data;
-            if (detail != null) {
-              _currentDetail = detail;
-            }
-            if (detail == null) {
-              return const SizedBox.shrink();
-            }
+            if (detail == null) return const SizedBox.shrink();
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _buildHeader(detail),
+                _buildHeader(),
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.fromLTRB(16, 18, 16, 24),
@@ -85,11 +116,11 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                         const SizedBox(height: 20),
                         _buildKeyPhrases(detail),
                         const SizedBox(height: 20),
-                        _buildPracticeActivities(detail),
-                        const SizedBox(height: 16),
                         _buildWorkplaceTip(detail.tip),
                         const SizedBox(height: 24),
-                        _buildCompletionButton(),
+                        _isCompleted
+                            ? _buildCompletedBadge()
+                            : _buildTakeQuizButton(),
                       ],
                     ),
                   ),
@@ -102,7 +133,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
     );
   }
 
-  Widget _buildHeader(LessonDetailData detail) {
+  Widget _buildHeader() {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 18, 16, 20),
       color: const Color(0xFF0a1c2a),
@@ -111,16 +142,53 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
         children: [
           IconButton(
             icon: const Icon(Icons.arrow_back, color: Colors.white70),
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => Navigator.of(context).pop(_isCompleted),
           ),
           const SizedBox(height: 8),
-          Text(
-            _selectedModule.title,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  _selectedModule.title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              if (_isCompleted)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.greenAccent, width: 1.2),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.check_circle,
+                        color: Colors.greenAccent,
+                        size: 16,
+                      ),
+                      SizedBox(width: 6),
+                      Text(
+                        'Completed',
+                        style: TextStyle(
+                          color: Colors.greenAccent,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
           ),
           const SizedBox(height: 4),
           Text(
@@ -180,7 +248,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
         const SizedBox(height: 12),
         ...detail.keyLanguage.map((item) {
           final translationList = detail.supportedLanguages
-              .map((lang) => '${lang}: ${item.translations[lang] ?? ''}')
+              .map((lang) => '$lang: ${item.translations[lang] ?? ''}')
               .where((line) => line.trim().isNotEmpty)
               .toList();
           return Container(
@@ -226,113 +294,9 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
               ],
             ),
           );
-        }).toList(),
+        }),
       ],
     );
-  }
-
-  Widget _buildPracticeActivities(LessonDetailData detail) {
-    // Filter out "Record your introduction"
-    final filteredPractices = detail.practices.where((p) => 
-      !p.title.toLowerCase().contains('record your introduction')
-    ).toList();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const Text(
-          'Practice Activities',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 12),
-        ...filteredPractices.map((practice) {
-          return GestureDetector(
-            onTap: () => _handlePracticeTap(practice),
-            child: Container(
-              margin: const EdgeInsets.only(bottom: 10),
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: const Color(0xFF031830),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.white10),
-              ),
-              child: Row(
-                children: [
-                  Icon(_practiceIcon(practice.mode), color: Colors.white70),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          practice.title,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          practice.description,
-                          style: const TextStyle(color: Colors.white54),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: ThemeColors.accent,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Text(
-                      'Tap to start',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }).toList(),
-      ],
-    );
-  }
-
-  Future<void> _handlePracticeTap(LessonPracticeItem practice) async {
-    if (practice.mode == LessonPracticeMode.record &&
-        !await PermissionService.ensureMicrophonePermission(context)) {
-      return;
-    }
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => PracticeActivityScreen(
-          practice: practice,
-          lessonTitle: widget.lesson.title,
-          scenarios: _currentDetail!.scenarios,
-          keyLanguage: _currentDetail!.keyLanguage,
-        ),
-      ),
-    );
-  }
-
-  IconData _practiceIcon(LessonPracticeMode mode) {
-    switch (mode) {
-      case LessonPracticeMode.matching:
-        return Icons.link;
-      case LessonPracticeMode.multipleChoice:
-        return Icons.checklist;
-      case LessonPracticeMode.record:
-      default:
-        return Icons.mic;
-    }
   }
 
   Widget _buildWorkplaceTip(String tip) {
@@ -355,16 +319,53 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
     );
   }
 
-  Widget _buildCompletionButton() {
-    return ElevatedButton(
-      onPressed: () {},
+  Widget _buildCompletedBadge() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 20),
+      decoration: BoxDecoration(
+        color: Colors.green.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.greenAccent.withValues(alpha: 0.4),
+          width: 1.5,
+        ),
+      ),
+      child: const Column(
+        children: [
+          Icon(Icons.emoji_events_rounded, color: Colors.amber, size: 48),
+          SizedBox(height: 10),
+          Text(
+            'Lesson Completed! 🎉',
+            style: TextStyle(
+              color: Colors.greenAccent,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(height: 4),
+          Text(
+            'You scored 80% or more on this quiz.',
+            style: TextStyle(color: Colors.white54, fontSize: 13),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTakeQuizButton() {
+    return ElevatedButton.icon(
+      onPressed: _openQuiz,
       style: ElevatedButton.styleFrom(
         backgroundColor: const Color(0xFF0869d0),
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(vertical: 16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
-      child: const Text('Mark Lesson Complete'),
+      icon: const Icon(Icons.quiz_rounded),
+      label: const Text(
+        'Take Quiz to Complete',
+        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+      ),
     );
   }
 }

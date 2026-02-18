@@ -38,6 +38,7 @@ dependencies:
   gotrue: ^2.18.0
   postgrest: ^2.6.0
   sign_in_with_apple: ^7.0.1
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   flutter_test:

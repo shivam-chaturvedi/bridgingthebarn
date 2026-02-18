@@ -149,10 +149,15 @@ class _AccountScreenState extends State<AccountScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
+              style: TextButton.styleFrom(foregroundColor: Colors.white70),
               child: const Text('Cancel'),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.redAccent,
+                textStyle: const TextStyle(fontWeight: FontWeight.bold),
+              ),
               child: const Text('Log out'),
             ),
           ],
@@ -190,11 +195,15 @@ class _AccountScreenState extends State<AccountScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
+              style: TextButton.styleFrom(foregroundColor: Colors.white70),
               child: const Text('Cancel'),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
-              style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.redAccent,
+                textStyle: const TextStyle(fontWeight: FontWeight.bold),
+              ),
               child: const Text('Delete'),
             ),
           ],
@@ -313,7 +322,15 @@ class _AccountScreenState extends State<AccountScreen> {
                     decoration: const InputDecoration(
                       labelText: 'Full name',
                       labelStyle: TextStyle(color: Colors.white60),
-                      border: OutlineInputBorder(),
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white24),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white24),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white, width: 2.0),
+                      ),
                     ),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
@@ -330,7 +347,15 @@ class _AccountScreenState extends State<AccountScreen> {
                     decoration: const InputDecoration(
                       labelText: 'Email address',
                       labelStyle: TextStyle(color: Colors.white60),
-                      border: OutlineInputBorder(),
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white24),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white24),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white, width: 2.0),
+                      ),
                     ),
                     validator: (value) {
                       if (value == null || !value.contains('@')) {
@@ -345,7 +370,7 @@ class _AccountScreenState extends State<AccountScreen> {
                     child: ElevatedButton(
                       onPressed: _isSavingProfile ? null : _saveProfile,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: ThemeColors.accent,
+                        backgroundColor: const Color(0xFF0E5469),
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
@@ -378,7 +403,15 @@ class _AccountScreenState extends State<AccountScreen> {
                     decoration: const InputDecoration(
                       labelText: 'Current password',
                       labelStyle: TextStyle(color: Colors.white60),
-                      border: OutlineInputBorder(),
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white24),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white24),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white, width: 2.0),
+                      ),
                     ),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
@@ -395,7 +428,15 @@ class _AccountScreenState extends State<AccountScreen> {
                     decoration: const InputDecoration(
                       labelText: 'New password',
                       labelStyle: TextStyle(color: Colors.white60),
-                      border: OutlineInputBorder(),
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white24),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white24),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white, width: 2.0),
+                      ),
                     ),
                     validator: (value) {
                       if (value == null || value.trim().length < 6) {
@@ -412,7 +453,15 @@ class _AccountScreenState extends State<AccountScreen> {
                     decoration: const InputDecoration(
                       labelText: 'Confirm password',
                       labelStyle: TextStyle(color: Colors.white60),
-                      border: OutlineInputBorder(),
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white24),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white24),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white, width: 2.0),
+                      ),
                     ),
                     validator: (value) {
                       if (value == null || value.trim().length < 6) {
@@ -490,7 +539,7 @@ class _AccountScreenState extends State<AccountScreen> {
             ),
             const SizedBox(height: 32),
             const Text(
-              'Need help? Reach out to support@bridgingbarn.com or use the Help & Support menu.',
+              'Need help? Reach out to mairadahiya@gmail.com or use the Help & Support menu.',
               style: TextStyle(color: Colors.white60),
             ),
           ],

@@ -8,6 +8,7 @@ import '../screens/lesson_detail_screen.dart';
 import '../screens/lessons_screen.dart';
 import '../screens/speak_screen.dart';
 import '../services/lesson_service.dart';
+import '../services/lesson_progress_service.dart';
 import '../services/community_service.dart';
 import '../services/progress_service.dart';
 import '../services/tts_service.dart';
@@ -37,6 +38,9 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _progressUserId;
   late final Future<List<Lesson>> _lessonsFuture;
   late Future<CommunityStats> _communityStatsFuture;
+  List<Lesson> _allLessons = [];
+  Map<String, dynamic> _userProgress = {};
+  bool _isLoadingLessons = true;
 
   @override
   void initState() {
@@ -54,6 +58,23 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_progressUserId != userId || _progressFuture == null) {
       _progressFuture = ProgressService.trackDailyOpen(userId);
       _progressUserId = userId;
+      _loadInProgressLessons(userId);
+    }
+  }
+
+  Future<void> _loadInProgressLessons(String userId) async {
+    try {
+      final lessons = await LessonService.fetchLessons();
+      final progressList = await LessonProgressService.fetchUserProgress(userId);
+      if (mounted) {
+        setState(() {
+          _allLessons = lessons;
+          _userProgress = {'list': progressList};
+          _isLoadingLessons = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isLoadingLessons = false);
     }
   }
 
@@ -87,6 +108,8 @@ class _HomeScreenState extends State<HomeScreen> {
           _buildDailyGoalCard(context, auth),
           const SizedBox(height: 20),
           _buildStatChips(context, auth),
+          const SizedBox(height: 30),
+          _buildInProgressLessons(),
           const SizedBox(height: 30),
           _buildSectionTitle('Learn Phrases'),
           const SizedBox(height: 12),
@@ -165,7 +188,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: const HeroButton(
                     icon: Icons.play_arrow,
                     label: 'Continue Learning',
-                    subLabel: 'Next: Horse Care',
                     backgroundColor: Color(0xFFFACC47),
                     iconColor: Colors.black,
                     textColor: Colors.white,
@@ -339,7 +361,6 @@ class _HomeScreenState extends State<HomeScreen> {
         }
         final stats = [
           {'value': '${metric.streak}', 'label': 'Streak'},
-          {'value': '${metric.badges.length}', 'label': 'Badges'},
           {'value': '${metric.lessonsCompleted}', 'label': 'Lessons'},
         ];
         return Row(
@@ -546,7 +567,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: List.generate(
-        3,
+        2,
         (_) => Expanded(
           child: Container(
             margin: const EdgeInsets.symmetric(horizontal: 4),
@@ -710,6 +731,122 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildInProgressLessons() {
+    if (_isLoadingLessons || _allLessons.isEmpty) return const SizedBox.shrink();
+
+    final progressList = (_userProgress['list'] as List<dynamic>? ?? [])
+        .cast<Map<String, dynamic>>();
+
+    final inProgressLessons = <Lesson>[];
+    final lessonProgressMap = <String, double>{};
+
+    for (final lesson in _allLessons) {
+      final totalModules = lesson.modules.length;
+      if (totalModules == 0) continue;
+
+      final completedModulesCount = progressList
+          .where((p) => p['lesson_id'] == lesson.id)
+          .map((p) => p['module_id'])
+          .toSet()
+          .length;
+
+      if (completedModulesCount > 0 && completedModulesCount < totalModules) {
+        inProgressLessons.add(lesson);
+        lessonProgressMap[lesson.id] = completedModulesCount / totalModules;
+      }
+    }
+
+    if (inProgressLessons.isEmpty) return const SizedBox.shrink();
+
+    // Sort: most recent first
+    inProgressLessons.sort((a, b) {
+      final aLatest = progressList
+          .where((p) => p['lesson_id'] == a.id)
+          .map((p) => DateTime.tryParse(p['completed_at'] ?? '') ?? DateTime(0))
+          .reduce((v, e) => v.isAfter(e) ? v : e);
+      final bLatest = progressList
+          .where((p) => p['lesson_id'] == b.id)
+          .map((p) => DateTime.tryParse(p['completed_at'] ?? '') ?? DateTime(0))
+          .reduce((v, e) => v.isAfter(e) ? v : e);
+      return bLatest.compareTo(aLatest);
+    });
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionTitle('Continue Learning'),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 140,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: inProgressLessons.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            itemBuilder: (context, index) {
+              final lesson = inProgressLessons[index];
+              final progress = lessonProgressMap[lesson.id] ?? 0.0;
+              return GestureDetector(
+                onTap: () async {
+                   await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => LessonDetailScreen(lesson: lesson),
+                    ),
+                  );
+                  final userId = context.read<AuthProvider>().userId;
+                  if (userId != null) _loadInProgressLessons(userId);
+                },
+                child: Container(
+                  width: 240,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF041C26),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.white12),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        lesson.title,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${(progress * lesson.modules.length).round()} of ${lesson.modules.length} modules',
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 13,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          value: progress,
+                          backgroundColor: Colors.white12,
+                          color: ThemeColors.accent,
+                          minHeight: 6,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }

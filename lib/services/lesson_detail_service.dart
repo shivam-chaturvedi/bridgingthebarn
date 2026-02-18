@@ -42,6 +42,30 @@ class LessonScenario {
   final List<String> options;
 }
 
+class LessonQuizOption {
+  LessonQuizOption({
+    required this.id,
+    required this.optionText,
+    required this.isCorrect,
+  });
+
+  final String id;
+  final String optionText;
+  final bool isCorrect;
+}
+
+class LessonQuizQuestion {
+  LessonQuizQuestion({
+    required this.id,
+    required this.question,
+    required this.options,
+  });
+
+  final String id;
+  final String question;
+  final List<LessonQuizOption> options;
+}
+
 class LessonDetailData {
   LessonDetailData({
     required this.goal,
@@ -164,5 +188,47 @@ class LessonDetailService {
       practices: practices,
       scenarios: scenarios,
     );
+  }
+
+  static Future<List<LessonQuizQuestion>> fetchQuizQuestions(String lessonId) async {
+    final quizRows = await _client
+        .from('lesson_quizzes')
+        .select('id, question')
+        .eq('lesson_id', lessonId)
+        .order('position');
+
+    final quizList = (quizRows as List<dynamic>? ?? []).cast<Map<String, dynamic>>();
+    if (quizList.isEmpty) return [];
+
+    final quizIds = quizList.map((r) => r['id'] as String).toList();
+
+    final optionRows = await _client
+        .from('lesson_quiz_options')
+        .select('id, quiz_id, option_text, is_correct')
+        .filter('quiz_id', 'in', quizIds)
+        .order('position');
+
+    final optionList = (optionRows as List<dynamic>? ?? []).cast<Map<String, dynamic>>();
+
+    final optionMap = <String, List<LessonQuizOption>>{};
+    for (final row in optionList) {
+      final quizId = row['quiz_id'] as String? ?? '';
+      optionMap.putIfAbsent(quizId, () => []).add(
+        LessonQuizOption(
+          id: row['id'] as String? ?? '',
+          optionText: row['option_text'] as String? ?? '',
+          isCorrect: row['is_correct'] as bool? ?? false,
+        ),
+      );
+    }
+
+    return quizList.map((row) {
+      final id = row['id'] as String? ?? '';
+      return LessonQuizQuestion(
+        id: id,
+        question: row['question'] as String? ?? '',
+        options: optionMap[id] ?? [],
+      );
+    }).toList();
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -339,7 +340,14 @@ class _AuthScreenState extends State<AuthScreen> {
               spacing: 12,
               children: [
                 TextButton(
-                  onPressed: () => _openPolicy(const PrivacyScreen()),
+                  onPressed: () async {
+                    final url = Uri.parse(
+                        'https://www.termsfeed.com/live/7fe2b83d-6004-4259-956f-abdaacde5373');
+                    await launchUrl(
+                      url,
+                      mode: LaunchMode.externalApplication,
+                    );
+                  },
                   child: const Text('Privacy Policy'),
                 ),
                 TextButton(

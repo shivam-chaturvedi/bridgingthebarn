@@ -39,9 +39,9 @@ class AccountService {
     }
 
     try {
-      await _client.from('profiles').delete().eq('id', currentUser.id);
+      await _client.functions.invoke('delete-user-account');
     } catch (error) {
-      throw Exception('Could not delete profile: $error');
+      throw Exception('Could not delete account: $error');
     }
 
     await _client.auth.signOut();

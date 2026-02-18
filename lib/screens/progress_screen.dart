@@ -8,8 +8,11 @@ import '../screens/account_screen.dart';
 import '../screens/auth_screen.dart';
 import '../screens/community_screen.dart';
 import '../screens/help_screen.dart';
+import '../screens/lesson_detail_screen.dart';
 import '../screens/privacy_screen.dart';
 import '../screens/vocab_screen.dart';
+import '../services/lesson_progress_service.dart';
+import '../services/lesson_service.dart';
 import '../services/progress_service.dart';
 import '../theme/theme_colors.dart';
 import '../widgets/app_bottom_navigation_bar.dart';
@@ -25,6 +28,9 @@ class ProgressScreen extends StatefulWidget {
 
 class _ProgressScreenState extends State<ProgressScreen> {
   Future<ProgressMetric>? _metricFuture;
+  List<Lesson> _lessons = [];
+  Map<String, dynamic> _userProgress = {};
+  bool _isLoadingLessons = true;
 
   @override
   void didChangeDependencies() {
@@ -32,6 +38,36 @@ class _ProgressScreenState extends State<ProgressScreen> {
     final profileId = context.read<AuthProvider>().userId;
     if (profileId != null) {
       _metricFuture ??= ProgressService.fetchForProfile(profileId);
+      _loadLessonsAndProgress(profileId);
+    }
+  }
+
+  Future<void> _loadLessonsAndProgress(String profileId) async {
+    try {
+      final lessons = await LessonService.fetchLessons();
+      final progressList = await LessonProgressService.fetchUserProgress(profileId);
+
+      // Convert list of progress to a map for easier lookup if needed,
+      // or just keep the list to process later.
+      // Here we will keep the list to calculate in-progress status.
+
+      if (mounted) {
+        setState(() {
+          _lessons = lessons;
+          _isLoadingLessons = false;
+          // transform progressList to a more usable format if needed
+          // For now we will use the raw list in the build method or helper
+          _userProgress = {
+            'list': progressList,
+          };
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingLessons = false;
+        });
+      }
     }
   }
 
@@ -56,6 +92,8 @@ class _ProgressScreenState extends State<ProgressScreen> {
                             _buildHeader(metric, loading),
                             const SizedBox(height: 20),
                             _buildStatsGrid(metric),
+                            const SizedBox(height: 20),
+                            _buildInProgressLessons(),
                             const SizedBox(height: 20),
                             _buildDailyGoalCard(metric),
                             const SizedBox(height: 20),
@@ -164,8 +202,11 @@ class _ProgressScreenState extends State<ProgressScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            children: const [
-              Icon(LucideIcons.arrowLeft, color: Colors.white70),
+            children: [
+              IconButton(
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(LucideIcons.arrowLeft, color: Colors.white70),
+              ),
               SizedBox(width: 12),
               Expanded(
                 child: Text(
@@ -322,6 +363,134 @@ class _ProgressScreenState extends State<ProgressScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildInProgressLessons() {
+    if (_isLoadingLessons) return const SizedBox.shrink();
+
+    final progressList = (_userProgress['list'] as List<dynamic>? ?? [])
+        .cast<Map<String, dynamic>>();
+
+    // Calculate in-progress lessons
+    final inProgressLessons = <Lesson>[];
+    final lessonProgressMap = <String, double>{};
+
+    for (final lesson in _lessons) {
+      final totalModules = lesson.modules.length;
+      if (totalModules == 0) continue;
+
+      final completedModulesCount = progressList
+          .where((p) => p['lesson_id'] == lesson.id)
+          .map((p) => p['module_id'])
+          .toSet()
+          .length;
+
+      if (completedModulesCount > 0 && completedModulesCount < totalModules) {
+        inProgressLessons.add(lesson);
+        lessonProgressMap[lesson.id] = completedModulesCount / totalModules;
+      }
+    }
+
+    if (inProgressLessons.isEmpty) return const SizedBox.shrink();
+
+    // Sort by most recent activity (approximate, using latest completed module timestamp)
+    inProgressLessons.sort((a, b) {
+      final aLatest = progressList
+          .where((p) => p['lesson_id'] == a.id)
+          .map((p) => DateTime.tryParse(p['completed_at'] ?? '') ?? DateTime(0))
+          .reduce((v, e) => v.isAfter(e) ? v : e);
+      final bLatest = progressList
+          .where((p) => p['lesson_id'] == b.id)
+          .map((p) => DateTime.tryParse(p['completed_at'] ?? '') ?? DateTime(0))
+          .reduce((v, e) => v.isAfter(e) ? v : e);
+      return bLatest.compareTo(aLatest);
+    });
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'In Progress',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 140,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: inProgressLessons.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 12),
+              itemBuilder: (context, index) {
+                final lesson = inProgressLessons[index];
+                final progress = lessonProgressMap[lesson.id] ?? 0.0;
+                return GestureDetector(
+                  onTap: () async {
+                     await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => LessonDetailScreen(lesson: lesson),
+                      ),
+                    );
+                    // Refresh progress when returning
+                    final profileId = context.read<AuthProvider>().userId;
+                    if(profileId != null)_loadLessonsAndProgress(profileId);
+                  },
+                  child: Container(
+                    width: 240,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF041C26),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.white12),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          lesson.title,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${(progress * lesson.modules.length).round()} of ${lesson.modules.length} modules',
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 13,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: progress,
+                            backgroundColor: Colors.white12,
+                            color: ThemeColors.accent,
+                            minHeight: 6,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

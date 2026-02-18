@@ -41,15 +41,8 @@ class HelpScreen extends StatelessWidget {
             _buildSupportCard(
               icon: LucideIcons.mail,
               label: 'Email support',
-              detail: 'support@bridgingbarn.com',
+              detail: 'mairadahiya@gmail.com',
               accent: ThemeColors.accent,
-            ),
-            const SizedBox(height: 12),
-            _buildSupportCard(
-              icon: LucideIcons.phone,
-              label: 'Call us',
-              detail: '+65 1234 5678 (Mon-Fri, 9am-6pm)',
-              accent: Colors.greenAccent,
             ),
             const SizedBox(height: 24),
             const Text(
