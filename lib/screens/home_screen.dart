@@ -41,6 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Lesson> _allLessons = [];
   Map<String, dynamic> _userProgress = {};
   bool _isLoadingLessons = true;
+  DateTime? _lastProgressDay;
 
   @override
   void initState() {
@@ -53,9 +54,14 @@ class _HomeScreenState extends State<HomeScreen> {
     if (userId == null) {
       _progressFuture = null;
       _progressUserId = null;
+      _lastProgressDay = null;
       return;
     }
-    if (_progressUserId != userId || _progressFuture == null) {
+    final nowUtc = DateTime.now().toUtc();
+    final todayUtc = DateTime.utc(nowUtc.year, nowUtc.month, nowUtc.day);
+    final needsRefresh = _lastProgressDay != todayUtc;
+    if (_progressUserId != userId || _progressFuture == null || needsRefresh) {
+      _lastProgressDay = todayUtc;
       _progressFuture = ProgressService.trackDailyOpen(userId);
       _progressUserId = userId;
       _loadInProgressLessons(userId);

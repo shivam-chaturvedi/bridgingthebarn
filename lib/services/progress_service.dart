@@ -21,6 +21,7 @@ class ProgressMetric {
     required this.dailyGoalProgress,
     required this.dailyGoalTarget,
     required this.lessonsCompleted,
+    required this.lastOpenDate,
   });
 
   final String id;
@@ -31,6 +32,7 @@ class ProgressMetric {
   final int dailyGoalProgress;
   final int dailyGoalTarget;
   final int lessonsCompleted;
+  final DateTime? lastOpenDate;
 
   factory ProgressMetric.fromJson(Map<String, dynamic> json) {
     final badgesData = json['badges'] as List<dynamic>? ?? [];
@@ -43,6 +45,9 @@ class ProgressMetric {
       dailyGoalProgress: json['daily_goal_progress'] as int? ?? 0,
       dailyGoalTarget: json['daily_goal_target'] as int? ?? 50,
       lessonsCompleted: json['lessons_completed'] as int? ?? 0,
+      lastOpenDate: json['last_open_date'] != null
+          ? DateTime.parse(json['last_open_date'] as String).toUtc()
+          : null,
     );
   }
 
@@ -56,6 +61,7 @@ class ProgressMetric {
       dailyGoalProgress: 0,
       dailyGoalTarget: 50,
       lessonsCompleted: 0,
+      lastOpenDate: null,
     );
   }
 }

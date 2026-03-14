@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'navigation/deep_link_manager.dart';
 import 'navigation/main_navigation.dart';
 import 'providers/app_language_provider.dart';
 import 'providers/app_settings_provider.dart';
@@ -40,8 +41,28 @@ Future<void> main() async {
   });
 }
 
-class BridgingBarnApp extends StatelessWidget {
+class BridgingBarnApp extends StatefulWidget {
   const BridgingBarnApp({super.key});
+
+  @override
+  State<BridgingBarnApp> createState() => _BridgingBarnAppState();
+}
+
+class _BridgingBarnAppState extends State<BridgingBarnApp> {
+  late final DeepLinkManager _deepLinkManager;
+
+  @override
+  void initState() {
+    super.initState();
+    _deepLinkManager = DeepLinkManager(navigatorKey: _navigatorKey);
+    unawaited(_deepLinkManager.init());
+  }
+
+  @override
+  void dispose() {
+    _deepLinkManager.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {

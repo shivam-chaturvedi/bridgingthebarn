@@ -1,6 +1,6 @@
 {
-    "name": "bridging_barn",
-    "short_name": "bridging_barn",
+  "name": "Bridging Barn",
+  "short_name": "Bridging Barn",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

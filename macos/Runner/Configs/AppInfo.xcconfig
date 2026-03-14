@@ -8,7 +8,7 @@
 PRODUCT_NAME = bridging_barn
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.example.bridgingBarn
+PRODUCT_BUNDLE_IDENTIFIER = com.maira.bridgingBarn
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2026 com.example. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2026 com.maira. All rights reserved.

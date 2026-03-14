@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "bridging_barn" "\0"
+            VALUE "CompanyName", "com.maira" "\0"
+            VALUE "FileDescription", "Bridging Barn" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "bridging_barn" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.example. All rights reserved." "\0"
+            VALUE "InternalName", "Bridging Barn" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 com.maira. All rights reserved." "\0"
             VALUE "OriginalFilename", "bridging_barn.exe" "\0"
-            VALUE "ProductName", "bridging_barn" "\0"
+            VALUE "ProductName", "Bridging Barn" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

@@ -12,7 +12,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # In Android, build-name is used as versionName while build-number used as versionCode.
 # Read more about Android versioning at https://developer.android.com/studio/publish/versioning
 # In iOS, build-name is used as CFBundleShortVersionString while build-number is used as CFBundleVersion.
-version: 1.0.0+1
+version: 1.0.0+4
 
 environment:
   sdk: ^3.9.2
@@ -50,6 +50,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules or activating additional ones.
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.14.4
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -92,3 +93,8 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/asset/from-package
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: assets/logo.jpeg
