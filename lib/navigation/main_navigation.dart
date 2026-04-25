@@ -5,6 +5,7 @@ import '../screens/account_screen.dart';
 import '../screens/community_screen.dart';
 import '../screens/help_screen.dart';
 import '../screens/home_screen.dart';
+import '../screens/interviews_screen.dart';
 import '../screens/lessons_screen.dart';
 import '../screens/privacy_screen.dart';
 import '../screens/progress_screen.dart';
@@ -132,6 +133,17 @@ class _MainNavigationState extends State<MainNavigation> {
           Navigator.pop(context);
           Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => const VocabScreen()),
+          );
+        },
+      ),
+      MoreOption(
+        label: 'Interviews',
+        icon: LucideIcons.video,
+        onTap: () {
+          navigateToProtectedScreen(
+            context: context,
+            feature: 'Interviews',
+            screen: const InterviewsScreen(),
           );
         },
       ),

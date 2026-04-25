@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../providers/app_language_provider.dart';
 import '../providers/translate_provider.dart';
+import '../services/gemini_service.dart';
 import '../services/translation_service.dart';
 import '../services/tts_service.dart';
 import '../theme/theme_colors.dart';
@@ -18,6 +19,7 @@ class SpeakScreen extends StatelessWidget {
       create: (_) => TranslateProvider(
         translationService: TranslationService(),
         ttsService: TtsService(),
+        geminiService: GeminiService(),
         initialLanguage: language,
       ),
       child: const _SpeakScreenBody(),
@@ -51,6 +53,8 @@ class _SpeakScreenBody extends StatelessWidget {
             _buildHeader(provider, context),
             const SizedBox(height: 16),
             _buildStepIndicator(),
+            const SizedBox(height: 16),
+            _buildSpokenLanguageCard(provider),
             const SizedBox(height: 16),
             _buildRecordCard(provider, context),
             const SizedBox(height: 16),
@@ -87,11 +91,15 @@ class _SpeakScreenBody extends StatelessWidget {
         children: [
           const Text(
             'Need to translate something?',
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
           ),
           const SizedBox(height: 6),
           const Text(
-            'Speak in Tamil, Malayalam, or Hindi',
+            'Speak in Malay, Bangla, Tamil, or Hindi',
             style: TextStyle(color: Colors.white70),
           ),
           const SizedBox(height: 18),
@@ -106,43 +114,112 @@ class _SpeakScreenBody extends StatelessWidget {
             ),
             onPressed: () => provider.toggleRecording(context),
             icon: const Icon(Icons.mic, color: Colors.white),
-            label: const Text('Tap to Speak', style: TextStyle(fontWeight: FontWeight.w600)),
+            label: const Text(
+              'Tap to Speak',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
           ),
+          if (provider.detectedLanguageLabel.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text(
+              'Detected language: ${provider.detectedLanguageLabel}',
+              style: const TextStyle(color: Colors.white70, fontSize: 12),
+            ),
+          ],
         ],
       ),
     );
   }
 
   Widget _buildStepIndicator() {
-    final steps = ['Record', 'Transcribe', 'Language', 'Audio'];
+    final steps = [
+      'Select language',
+      'Record',
+      'Transcribe',
+      'Language',
+      'Audio',
+    ];
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: steps
           .asMap()
           .entries
           .map(
-            (entry) => Column(
-              children: [
-                CircleAvatar(
-                  radius: 22,
-                  backgroundColor: Colors.white10,
-                  child: Text(
-                    '${entry.key + 1}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+            (entry) => Expanded(
+              child: Column(
+                children: [
+                  CircleAvatar(
+                    radius: 22,
+                    backgroundColor: Colors.white10,
+                    child: Text(
+                      '${entry.key}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  entry.value,
-                  style: const TextStyle(color: Colors.white70),
-                ),
-              ],
+                  const SizedBox(height: 12),
+                  Text(
+                    entry.value,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.white70, fontSize: 12),
+                  ),
+                ],
+              ),
             ),
           )
           .toList(),
+    );
+  }
+
+  Widget _buildSpokenLanguageCard(TranslateProvider provider) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1B1B1F),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Step 0 • Select spoken language',
+            style: TextStyle(color: Colors.white70),
+          ),
+          const SizedBox(height: 8),
+          DropdownButtonHideUnderline(
+            child: DropdownButton<LanguageDefinition>(
+              value: provider.inputLanguage ?? LanguageUtils.defaultLanguage,
+              isExpanded: true,
+              dropdownColor: const Color(0xFF1B1B1F),
+              iconEnabledColor: Colors.white70,
+              style: const TextStyle(color: Colors.white),
+              items: LanguageUtils.languages
+                  .map(
+                    (language) => DropdownMenuItem(
+                      value: language,
+                      child: Row(
+                        children: [
+                          Text(language.flag),
+                          const SizedBox(width: 8),
+                          Expanded(child: Text(language.name)),
+                        ],
+                      ),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (language) {
+                if (language != null) {
+                  provider.setInputLanguage(language);
+                }
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -183,7 +260,7 @@ class _SpeakScreenBody extends StatelessWidget {
                 child: Text(
                   provider.isListening
                       ? 'Listening...'
-                      : 'Press to record English speech',
+                      : 'Press to record speech',
                   style: const TextStyle(color: Colors.white70),
                 ),
               ),
@@ -220,21 +297,45 @@ class _SpeakScreenBody extends StatelessWidget {
           TextField(
             controller: provider.textController,
             maxLines: 3,
+            readOnly: true,
             style: const TextStyle(color: Colors.white),
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               border: InputBorder.none,
-              hintText: 'Captured English text appears here',
-              hintStyle: TextStyle(color: Colors.white30),
+              hintText: provider.transcribedText.isEmpty
+                  ? 'Transcribed text appears here'
+                  : null,
+              hintStyle: const TextStyle(color: Colors.white30),
             ),
-            onChanged: provider.updateSourceText,
           ),
+          if (provider.isListening && provider.recordedText.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                'Live capture: ${provider.recordedText}',
+                style: const TextStyle(color: Colors.white54, fontSize: 12),
+              ),
+            ),
+          const SizedBox(height: 8),
+          if (provider.isProcessingSpeech)
+            const Text(
+              'Detecting spoken language and normalizing the transcript…',
+              style: TextStyle(color: Colors.white54, fontSize: 12),
+            )
+          else if (provider.detectedLanguageLabel.isNotEmpty)
+            Text(
+              'Detected language: ${provider.detectedLanguageLabel}',
+              style: const TextStyle(color: Colors.white54, fontSize: 12),
+            ),
           const SizedBox(height: 12),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF0E5469),
               foregroundColor: Colors.white,
             ),
-            onPressed: provider.isTranslating
+            onPressed:
+                provider.transcribedText.isEmpty ||
+                    provider.isTranslating ||
+                    provider.isProcessingSpeech
                 ? null
                 : provider.transcribeAndTranslate,
             child: provider.isTranslating
@@ -246,7 +347,7 @@ class _SpeakScreenBody extends StatelessWidget {
                       strokeWidth: 2,
                     ),
                   )
-                : const Text('Transcribe & Translate'),
+                : Text('Translate to ${provider.targetLanguage.name}'),
           ),
         ],
       ),
@@ -258,7 +359,14 @@ class _SpeakScreenBody extends StatelessWidget {
     BuildContext context,
   ) {
     return InkWell(
-      onTap: () => _showLanguagePicker(context, provider),
+      onTap: () => _showLanguagePicker(
+        context: context,
+        selected: provider.targetLanguage,
+        onSelected: (language) {
+          provider.setTargetLanguage(language);
+          context.read<AppLanguageProvider>().setLanguage(language);
+        },
+      ),
       child: Container(
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
@@ -296,7 +404,11 @@ class _SpeakScreenBody extends StatelessWidget {
     );
   }
 
-  void _showLanguagePicker(BuildContext context, TranslateProvider provider) {
+  void _showLanguagePicker({
+    required BuildContext context,
+    required LanguageDefinition selected,
+    required ValueChanged<LanguageDefinition> onSelected,
+  }) {
     String filter = '';
     showModalBottomSheet(
       context: context,
@@ -310,9 +422,11 @@ class _SpeakScreenBody extends StatelessWidget {
         return StatefulBuilder(
           builder: (context, setState) {
             final filtered = availableLanguages
-                .where((lang) =>
-                    lang.name.toLowerCase().contains(filter.toLowerCase()) ||
-                    lang.code.toLowerCase().contains(filter.toLowerCase()))
+                .where(
+                  (lang) =>
+                      lang.name.toLowerCase().contains(filter.toLowerCase()) ||
+                      lang.code.toLowerCase().contains(filter.toLowerCase()),
+                )
                 .toList();
             return Padding(
               padding: EdgeInsets.only(
@@ -322,8 +436,10 @@ class _SpeakScreenBody extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14),
                       decoration: BoxDecoration(
@@ -355,7 +471,10 @@ class _SpeakScreenBody extends StatelessWidget {
                             horizontal: 0,
                             vertical: 2,
                           ),
-                          leading: Text(language.flag, style: const TextStyle(fontSize: 24)),
+                          leading: Text(
+                            language.flag,
+                            style: const TextStyle(fontSize: 24),
+                          ),
                           title: Text(
                             language.name,
                             style: const TextStyle(color: Colors.white),
@@ -364,12 +483,11 @@ class _SpeakScreenBody extends StatelessWidget {
                             language.locale,
                             style: const TextStyle(color: Colors.white54),
                           ),
-                          trailing: provider.targetLanguage.code == language.code
+                          trailing: selected.code == language.code
                               ? const Icon(Icons.check, color: Colors.white)
                               : null,
                           onTap: () {
-                            provider.setTargetLanguage(language);
-                            context.read<AppLanguageProvider>().setLanguage(language);
+                            onSelected(language);
                             Navigator.pop(context);
                           },
                         );

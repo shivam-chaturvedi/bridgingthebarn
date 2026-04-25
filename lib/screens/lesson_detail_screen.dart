@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/auth_provider.dart';
@@ -32,6 +33,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
   late final Future<LessonDetailData> _detailFuture;
   late final LessonModule _selectedModule;
   bool _isCompleted = false;
+  late FlutterTts _flutterTts;
 
   @override
   void initState() {
@@ -48,6 +50,13 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
               ));
     _detailFuture = LessonDetailService.fetchLessonDetail(widget.lesson.id);
     _loadCompletionState();
+    _flutterTts = FlutterTts();
+  }
+
+  @override
+  void dispose() {
+    _flutterTts.stop();
+    super.dispose();
   }
 
   Future<void> _loadCompletionState() async {
@@ -76,6 +85,26 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
     if (result == true && mounted) {
       setState(() => _isCompleted = true);
     }
+  }
+
+  Future<void> _playPhrase(String text) async {
+    final textToSpeak = _normalizePhraseForSpeech(text);
+    if (textToSpeak.isEmpty) return;
+    await _flutterTts.stop();
+    await _flutterTts.setLanguage('en-US');
+    await _flutterTts.setPitch(1.0);
+    await _flutterTts.setVolume(1.0);
+    await _flutterTts.speak(textToSpeak);
+  }
+
+  String _normalizePhraseForSpeech(String original) {
+    final segments = original
+        .split('_')
+        .map((segment) => segment.trim())
+        .where((segment) => segment.isNotEmpty)
+        .toList();
+    if (segments.isEmpty) return original.trim();
+    return segments.join(' ');
   }
 
   @override
@@ -251,47 +280,51 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
               .map((lang) => '$lang: ${item.translations[lang] ?? ''}')
               .where((line) => line.trim().isNotEmpty)
               .toList();
-          return Container(
-            margin: const EdgeInsets.only(bottom: 10),
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: const Color(0xFF031830),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.white10),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.volume_up, color: Colors.white70),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        item.phrase,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
+          return InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () => _playPhrase(item.phrase),
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: const Color(0xFF031830),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.white10),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.volume_up, color: Colors.white70),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          item.phrase,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
+                    ],
+                  ),
+                  if (translationList.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      translationList.first,
+                      style: const TextStyle(color: Colors.white54),
                     ),
                   ],
-                ),
-                if (translationList.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    translationList.first,
-                    style: const TextStyle(color: Colors.white54),
-                  ),
+                  if (item.explanation.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      '→ ${item.explanation}',
+                      style: const TextStyle(color: Colors.white38),
+                    ),
+                  ],
                 ],
-                if (item.explanation.isNotEmpty) ...[
-                  const SizedBox(height: 6),
-                  Text(
-                    '→ ${item.explanation}',
-                    style: const TextStyle(color: Colors.white38),
-                  ),
-                ],
-              ],
+              ),
             ),
           );
         }),

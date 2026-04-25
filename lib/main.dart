@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -18,6 +19,11 @@ final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
 Future<void> main() async {
   runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
+    try {
+      await dotenv.load(fileName: '.env');
+    } catch (error, stack) {
+      debugPrint('Failed to load .env: $error');
+    }
     await Supabase.initialize(
       url: SupabaseService.supabaseUrl,
       anonKey: SupabaseService.supabaseAnonKey,

@@ -50,9 +50,23 @@ class _PracticeActivityScreenState extends State<PracticeActivityScreen> {
   }
   
   Future<void> _playPhrase(String text) async {
+    final textToSpeak = _normalizePhraseForSpeech(text);
+    if (textToSpeak.isEmpty) return;
+    await _flutterTts.stop();
     await _flutterTts.setLanguage("en-US");
     await _flutterTts.setPitch(1.0);
-    await _flutterTts.speak(text);
+    await _flutterTts.setVolume(1.0);
+    await _flutterTts.speak(textToSpeak);
+  }
+
+  String _normalizePhraseForSpeech(String original) {
+    final segments = original
+        .split('_')
+        .map((segment) => segment.trim())
+        .where((segment) => segment.isNotEmpty)
+        .toList();
+    if (segments.isEmpty) return original.trim();
+    return segments.join(' ');
   }
 
   String get _modeLabel =>
@@ -623,4 +637,3 @@ class _MatchingBoardState extends State<_MatchingBoard> {
     );
   }
 }
-

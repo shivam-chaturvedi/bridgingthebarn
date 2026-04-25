@@ -6,26 +6,34 @@ class TranslationService {
   final OnDeviceTranslatorModelManager _modelManager;
   final Map<String, String> _cache = {};
 
-  Future<void> _ensureModel(TranslateLanguage target) async {
-    final modelTag = target.bcpCode;
+  Future<void> _ensureModel(TranslateLanguage language) async {
+    final modelTag = language.bcpCode;
     final downloaded = await _modelManager.isModelDownloaded(modelTag);
     if (!downloaded) {
       await _modelManager.downloadModel(modelTag);
     }
   }
 
-  String _cacheKey(String text, TranslateLanguage language) =>
-      '${language.bcpCode}|$text';
+  String _cacheKey(
+    String text,
+    TranslateLanguage source,
+    TranslateLanguage target,
+  ) => '${source.bcpCode}|${target.bcpCode}|$text';
 
-  Future<String> translate(String text, TranslateLanguage target) async {
-    final key = _cacheKey(text, target);
+  Future<String> translate(
+    String text,
+    TranslateLanguage source,
+    TranslateLanguage target,
+  ) async {
+    final key = _cacheKey(text, source, target);
     if (_cache.containsKey(key)) {
       return _cache[key]!;
     }
 
+    await _ensureModel(source);
     await _ensureModel(target);
     final translator = OnDeviceTranslator(
-      sourceLanguage: TranslateLanguage.english,
+      sourceLanguage: source,
       targetLanguage: target,
     );
     try {

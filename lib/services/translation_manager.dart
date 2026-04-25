@@ -1,3 +1,5 @@
+import 'package:google_mlkit_translation/google_mlkit_translation.dart';
+
 import '../utils/language_utils.dart';
 import '../services/translation_service.dart';
 
@@ -29,15 +31,16 @@ class TranslationManager {
 
     final languageCache = _cache.putIfAbsent(language.code, () => {});
     final request = _translationService
-        .translate(text, language.mlKitLanguage)
+        .translate(text, TranslateLanguage.english, language.mlKitLanguage)
         .then((result) {
-      languageCache[text] = result;
-      _pendingRequests.remove(cacheKey);
-      return result;
-    }).catchError((_) {
-      _pendingRequests.remove(cacheKey);
-      return text;
-    });
+          languageCache[text] = result;
+          _pendingRequests.remove(cacheKey);
+          return result;
+        })
+        .catchError((_) {
+          _pendingRequests.remove(cacheKey);
+          return text;
+        });
     _pendingRequests[cacheKey] = request;
     return request;
   }
